@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>大富豪 - THE ULTIMATE</title>
+    <script src="https://cdn.gravity.place/fe/sdk/index-1.0.2.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=M+PLUS+Rounded+1c:wght@700;900&display=swap');
+
+        :root {
+            --top-offset: 74px;
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --accent: #FFE66D;
+            --text-dark: #2F3542;
+            --card-w: 70px;
+            --card-h: 98px;
+            --active-glow: #00E5FF;
+        }
+
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #153818;
+            background-image: radial-gradient(circle at center, #2e7d32 0%, #153818 100%);
+            font-family: 'M PLUS Rounded 1c', 'Fredoka One', sans-serif;
+            color: white; overflow: hidden;
+            overscroll-behavior: none; 
+            user-select: none; -webkit-user-select: none;
+        }
+
+        #bg-revolution {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #4a0000; background-image: radial-gradient(circle at center, #b71c1c 0%, #4a0000 100%);
+            z-index: 0; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out;
+        }
+        body.bg-revolution #bg-revolution { opacity: 1; }
+
+        #game-container { position: absolute; top: var(--top-offset); bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; overflow: hidden; z-index: 1; }
+        #screens-wrapper { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; position: relative; }
+        .screen.active { display: flex; }
+        
+        h1, h2, h3 { text-align: center; margin: 10px 0; text-shadow: 2px 2px 0px rgba(0,0,0,0.4); font-weight: 900; letter-spacing: 2px; color: white; }
+        h1 { font-size: 2.5rem; color: var(--accent); -webkit-text-stroke: 1px var(--text-dark); }
+        
+        button {
+            background: var(--primary); color: white; border: 3px solid white; padding: 10px 16px; font-size: 16px; border-radius: 20px; 
+            margin: 5px 2px; cursor: pointer; font-family: inherit; font-weight: 900; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
+            outline: none;
+        }
+        button:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 0px 0 rgba(0,0,0,0.3); }
+        button:disabled { background: #555; border-color: #777; color: #999; cursor: not-allowed; transform: none; box-shadow: 0 6px 0 rgba(0,0,0,0.2); }
+        .btn-green { background: var(--secondary); box-shadow: 0 6px 0 #16a085; } .btn-green:active:not(:disabled) { box-shadow: 0 0px 0 #16a085; }
+        .btn-gray { background: #95a5a6; box-shadow: 0 6px 0 #7f8c8d; } .btn-gray:active:not(:disabled) { box-shadow: 0 0px 0 #7f8c8d; }
+        .hidden { display: none !important; }
+
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); padding: 15px; color: white; position: relative; z-index: 10;
+        }
+
+        #login-screen, #result-screen {
+            align-items: center; justify-content: center; gap: 10px; overflow: hidden; box-sizing: border-box; padding: 10px 0;
+        }
+        #lobby-screen {
+            align-items: center; justify-content: flex-start; gap: 6px; overflow: hidden; box-sizing: border-box; padding: 6px 0;
+        }
+        
+        .room-list, #chat-messages, #settings-tab-content, #active-rules-content, #lobby-players {
+            overflow-y: visible;
+        }
+        
+        .room-list { max-height: 52vh; width: 90%; max-width: 450px; margin-bottom: 6px; border: 2px solid rgba(255,255,255,0.2); justify-content: flex-start; }
+        
+        #lobby-players { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; width: 90%; max-width: 500px; margin: 0 auto 5px auto; max-height: 35vh; padding: 5px; }
+        .lobby-player-card {
+            background: rgba(0, 0, 0, 0.6); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 12px; padding: 8px 10px;
+            display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); transition: filter 0.3s;
+        }
+        .lobby-player-card img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; background: #fff; flex-shrink:0; transition: filter 0.3s; }
+        .lobby-player-info { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+        .p-name { font-size: 14px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .p-status { font-size: 11px; padding: 2px 6px; border-radius: 8px; margin-top: 4px; font-weight: 900; display: inline-block; align-self: flex-start; }
+        .p-status.host { background: var(--accent); color: #8B6508; } .p-status.ready { background: var(--secondary); color: #fff; } .p-status.cpu { background: #95a5a6; color: #fff; } .p-status.spec { background: #9b59b6; color: #fff; }
+        .p-status.disconnected { background: #e74c3c; color: #fff; } .p-status.abandoned { background: #7f8c8d; color: #fff; }
+
+        .players-area { 
+            display: flex; justify-content: center; align-items: flex-start; 
+            margin-top: 65px; padding: 5px 15px; flex-wrap: nowrap; gap: 10px;
+            min-height: 65px; width: 100%; box-sizing: border-box; overflow-x: auto; 
+            scrollbar-width: none; z-index: 5;
+        }
+        .players-area::-webkit-scrollbar { display: none; }
+        
+        .player-icon-container { position: relative; width: 40px; height: 40px; margin: 0 auto 2px auto; display: flex; justify-content: center; align-items: center; overflow: visible; }
+        .my-icon-container { position: relative; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; overflow: visible; } 
+
+        .player-status { 
+            text-align: center; background: rgba(0,0,0,0.5); color: white; padding: 6px; border-radius: 12px; min-width: 60px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); position: relative; flex-shrink: 0; display:flex; flex-direction:column; align-items:center; transition: all 0.3s;
+        }
+        .player-status.active-turn { border-color: var(--active-glow); background: rgba(0, 229, 255, 0.15); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); transform: translateY(-2px); z-index: 10; }
+        .player-status.active-turn::after { content: "手番"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--active-glow); color: #000; font-size: 9px; padding: 1px 6px; border-radius: 8px; font-weight: 900; z-index: 15; }
+        .player-status.clickable { cursor: pointer; border-color: rgba(255,230,109,0.5); }
+        .player-status.clickable:hover { background: rgba(255,230,109,0.2); box-shadow: 0 0 8px rgba(255,230,109,0.4); transform: translateY(-2px); }
+        .player-status.viewing { border-color: var(--accent); background: rgba(255,230,109,0.25); box-shadow: 0 0 15px rgba(255,230,109,0.6); }
+
+        .timer-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); z-index: 2; pointer-events: none; display: none; overflow: visible; }
+        .active-turn .timer-ring { display: block; }
+        .timer-circle-bg { fill: none; stroke: rgba(0,0,0,0.6); stroke-width: 3.5; }
+        .timer-circle-fg { fill: none; stroke: #00E5FF; stroke-width: 3.5; stroke-dasharray: 100; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; stroke-linecap: round; filter: drop-shadow(0 0 3px #00E5FF); }
+        .timer-warning .timer-circle-fg { stroke: #f1c40f; filter: drop-shadow(0 0 3px #f1c40f); }
+        .timer-danger .timer-circle-fg { stroke: #e74c3c; animation: pulseRed 1s infinite; filter: drop-shadow(0 0 3px #e74c3c); }
+        @keyframes pulseRed { 0% { filter: drop-shadow(0 0 2px #e74c3c); } 50% { filter: drop-shadow(0 0 8px #e74c3c); } 100% { filter: drop-shadow(0 0 2px #e74c3c); } }
+
+        #global-turn-timer {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 30px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 
+                -2px -2px 0 #000,  
+                 2px -2px 0 #000,
+                -2px  2px 0 #000,
+                 2px  2px 0 #000,
+                 0px  4px 8px rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 45px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 4px 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: all 0.3s;
+        }
+        #global-turn-timer.show { display: flex; }
+        #global-turn-timer.timer-warn {
+            color: #f39c12; 
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0px 0px 15px #f39c12;
+            border-color: #f39c12;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 10px rgba(243,156,18,0.3);
+        }
+        @keyframes globalTimerPop {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .anim-global-timer-pop { animation: globalTimerPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: center center; }
+        .timer-label { font-size: 9px; color: #ccc; text-shadow: 1px 1px 0 #000; margin-bottom: -4px; font-family: 'M PLUS Rounded 1c', sans-serif; letter-spacing: 0; }
+
+        .turn-arrow { display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; z-index: 5; margin: 0 -4px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .turn-arrow.arrow-normal { color: var(--secondary); animation: arrowMoveRight 1s infinite alternate ease-in-out; }
+        .turn-arrow.arrow-reverse { color: #e67e22; animation: arrowMoveLeft 1s infinite alternate ease-in-out; }
+        @keyframes arrowMoveRight { 0% { transform: translateX(-3px); } 100% { transform: translateX(3px); } }
+        @keyframes arrowMoveLeft { 0% { transform: translateX(3px); } 100% { transform: translateX(-3px); } }
+
+        .rank-tag { font-size: 10px; padding: 2px 5px; border-radius: 6px; display: inline-block; font-weight: 900; }
+        .rank-tag.rank-0 { background: #FFD700; color: #000; }
+        .rank-tag.rank-1 { background: #bdc3c7; color: #000; }
+        .rank-tag.rank-2 { background: #2ecc71; color: #FFFFFF; }
+        .rank-tag.rank-3 { background: #e67e22; color: #FFFFFF; }
+        .rank-tag.rank-4 { background: #c0392b; color: #FFFFFF; }
+        
+        .rank-badge-glow { position: relative; z-index: 10; transition: all 0.3s; }
+        .rank-badge-glow.rank-0 { box-shadow: 0 0 12px #FFD700; border: 1px solid #FFD700; animation: goldPulse 1.5s infinite; background: linear-gradient(135deg, #FFD700, #F39C12); color: #000; }
+        .rank-badge-glow.rank-1 { box-shadow: 0 0 8px #bdc3c7; border: 1px solid #bdc3c7; background: linear-gradient(135deg, #bdc3c7, #7f8c8d); color: #000; }
+        .rank-badge-glow.rank-3 { opacity: 0.8; }
+        .rank-badge-glow.rank-4 { opacity: 0.6; box-shadow: inset 0 0 5px #000; border: 1px dashed #555; background: #222 !important; color: #777 !important; }
+        @keyframes goldPulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+        
+        .board-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 5; margin-bottom: 20px; }
+        
+        #persistent-status-panel { position: absolute; top: 40%; transform: translateY(-50%); left: 12px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; z-index: 20; pointer-events: none; }
+        .status-badge { background: rgba(255, 255, 255, 0.95); color: var(--text-dark); padding: 2px 8px; border-radius: 6px; font-weight: 900; font-size: 11px; border: 1px solid var(--text-dark); box-shadow: 0 2px 4px rgba(0,0,0,0.4); display: none; }
+        .status-badge.active { display: block; animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .badge-rev { border-color: #e74c3c; color: #c0392b; } .badge-jback { border-color: #9b59b6; color: #8e44ad; } .badge-bind { border-color: #3498db; color: #2980b9; } .badge-revdir { border-color: #e67e22; color: #d35400; } .badge-kaidan { border-color: #f1c40f; color: #f39c12; }
+        
+        @keyframes badgePop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        #action-anim-text { position: absolute; top: 15px; left: 50%; font-size: 20px; font-weight: 900; color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); background: rgba(0, 0, 0, 0.75); padding: 8px 16px; border-radius: 12px; border: 2px solid var(--accent); box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100; pointer-events: none; opacity: 0; text-align: center; white-space: nowrap; }
+        @keyframes popIn { 0% { opacity: 0; transform: translate(-50%, 15px); } 15% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -15px); } }
+        .anim-pop { animation: popIn 1.8s ease-in-out forwards; }
+
+        #turn-popup-text, #spectator-notify-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-size: 36px; font-weight: 900; color: var(--active-glow); text-shadow: 0 0 20px #0088cc, 2px 2px 5px #000; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; white-space: nowrap; }
+        #turn-popup-text.show, #spectator-notify-text.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        #spectator-notify-text { font-size: 24px; color: #FFFFFF; text-shadow: 0 0 15px rgba(255,255,255,0.5), 2px 2px 5px #000; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 12px; border: 2px solid var(--accent); }
+
+        .turn-window { position: absolute; top: 12px; right: 12px; background: rgba(0, 0, 0, 0.85); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 10px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; z-index: 60; transition: background 0.3s, border-color 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.6); backdrop-filter: blur(5px); pointer-events: none; transform: scale(0.85); transform-origin: top right; }
+        .turn-window.my-turn { background: rgba(0, 100, 180, 0.95); border-color: var(--active-glow); box-shadow: 0 0 20px rgba(0, 229, 255, 0.6); animation: myTurnWindowPulse 1.5s infinite alternate; }
+        @keyframes myTurnWindowPulse { 0% { box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); } 100% { box-shadow: 0 0 25px rgba(0, 229, 255, 1); } }
+        .turn-text-container { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
+        .turn-name { font-size: 14px; font-weight: 900; color: white; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; letter-spacing: 1px; }
+        .turn-window.my-turn .turn-name { color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
+        .turn-suffix { font-size: 9px; color: #ccc; font-weight: 900; margin-top: 1px; }
+        .turn-window.my-turn .turn-suffix { color: #fff; }
+        
+        .played-cards-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        .history-cards-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; z-index: 1; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: center center; }
+        .played-cards { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; z-index: 5; margin-left: -15px; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: center center; }
+        
+        .played-cards .card { margin-left: -15px; margin-top: calc(var(--idx) * 15px); transform: scale(1.25) rotate(calc(var(--rot) * 1deg)); box-shadow: -2px 5px 10px rgba(0,0,0,0.5); z-index: var(--idx); }
+        .played-cards .card:first-child { margin-left: 0; }
+        
+        .history-card-group { position: absolute; display: flex; justify-content: center; margin-left: -15px; transition: all 0.5s ease; z-index: 1; }
+        .history-card-group .card { margin-left: -10px; margin-top: calc(var(--idx) * 12px); transform: scale(1.1) rotate(calc(var(--rot) * 1deg)); box-shadow: -2px 4px 8px rgba(0,0,0,0.6); z-index: var(--idx); }
+        .history-card-group .card:first-child { margin-left: 0; }
+
+        .card.history-gray { background: #ced6e0 !important; border-color: #a4b0be !important; }
+
+        .card { width: var(--card-w); height: var(--card-h); background: white; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-dark); font-weight: 900; font-size: 24px; box-shadow: -2px 3px 8px rgba(0,0,0,0.4); position: relative; cursor: pointer; transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s, filter 0.15s; user-select: none; border: 1px solid #ecf0f1; -webkit-tap-highlight-color: transparent; }
+        .card.red { color: #FF4757; } .card.black { color: #2F3542; }
+        .card.selected { transform: translateY(-12px) scale(1.03); box-shadow: 0 8px 15px rgba(0, 229, 255, 0.8); border: 2px solid var(--active-glow); z-index: 100 !important; }
+        
+        .card.disabled-card { background: #dcdde1 !important; border-color: #a4b0be !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important; pointer-events: none; transform: translateY(6px); }
+        .card.disabled-card.red { color: #d63031 !important; } .card.disabled-card.black { color: #2d3436 !important; }
+        .card.playable-highlight { box-shadow: 0 0 12px rgba(255, 230, 109, 0.9), inset 0 0 10px rgba(255, 230, 109, 0.4); border: 2px solid #FFE66D !important; transform: translateY(-3px); z-index: 6; }
+        
+        .card-top-left { position: absolute; top: 3px; left: 4px; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+        .card-tl-suit { font-size: 14px; } .card-tl-rank { font-size: 12px; font-weight: 900; margin-top: -1px; }
+        .card-rank-center { font-size: 26px; margin-top: 4px; }
+
+        .rule-cards .card { width: 40px; height: 56px; border-radius: 4px; font-size: 12px; margin-left: -20px; box-shadow: -1px 2px 4px rgba(0,0,0,0.4); transform: none !important; cursor: default; z-index: initial !important; }
+        .rule-cards .card:first-child { margin-left: 0; }
+        .rule-cards .card-top-left { top: 2px; left: 3px; } .rule-cards .card-tl-suit { font-size: 10px; } .rule-cards .card-tl-rank { font-size: 9px; margin-top: -1px; } .rule-cards .card-rank-center { font-size: 16px; margin-top: 3px; }
+
+        .hand-area { position: relative; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); padding: 4px 0 0 0; display: flex; flex-direction: column; align-items: center; border-top: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; width: 100%; box-sizing: border-box; z-index: 50; }
+        .hand-area.active-turn { animation: myTurnGlow 1.2s infinite alternate ease-in-out !important; border-top: 3px solid var(--active-glow) !important; }
+        @keyframes myTurnGlow { 0% { box-shadow: 0 -3px 15px rgba(0, 229, 255, 0.2), inset 0 3px 10px rgba(0, 229, 255, 0.1); border-top-color: rgba(0, 229, 255, 0.5); } 100% { box-shadow: 0 -8px 30px rgba(0, 229, 255, 0.7), inset 0 6px 20px rgba(0, 229, 255, 0.3); border-top-color: var(--active-glow); } }
+
+        .controls-container { width: 100%; display: flex; justify-content: center; align-items: center; padding: 2px 5px; gap: 8px; flex-wrap: nowrap; }
+        
+        #my-status-area { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.8); padding: 6px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.6); }
+        #my-status-area.active-turn { border-color: var(--active-glow); box-shadow: 0 0 15px rgba(0, 229, 255, 0.7); background: rgba(20, 20, 20, 0.9); }
+
+        .controls { display: flex; gap: 6px; align-items: center; justify-content: center; flex: 1; }
+        #btn-play { font-size: 18px; padding: 10px 24px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); margin: 0; flex-shrink: 0; }
+        #btn-pass { font-size: 14px; padding: 8px 16px; border-radius: 14px; margin: 0; flex-shrink: 0;}
+        #btn-clear { background: #e67e22; font-size: 12px; padding: 8px 10px; border-radius: 10px; margin: 0; flex-shrink: 0;}
+
+        .hand-cards { display: flex; justify-content: center; max-width: 100%; overflow-x: auto; padding-top: 8px; padding-bottom: 6px; gap: -35px; overscroll-behavior-x: contain; touch-action: pan-x; width: 100%; }
+        .hand-cards::-webkit-scrollbar { display: none; }
+        .hand-cards .card { margin-left: -30px; flex-shrink: 0; } .hand-cards .card:first-child { margin-left: 0; }
+        .hand-cards .card:hover:not(.disabled-card) { transform: translateY(-5px); z-index: 50; }
+        
+        .switch { position: relative; display: inline-block; width: 64px; height: 32px; border-radius: 32px; overflow: hidden; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: background-color 0.3s ease; border-radius: 32px; border: 2px solid rgba(255,255,255,0.2); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+        .slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 2px; bottom: 2px; background-color: white; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 2; }
+        .slider:after { content: "OFF"; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 12px; font-weight: 900; z-index: 1; transition: 0.3s; }
+        input:checked + .slider { background-color: #2ecc71; border-color: #27ae60; }
+        input:checked + .slider:before { transform: translateX(32px); }
+        input:checked + .slider:after { content: "ON"; left: 10px; right: auto; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+        input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
+
+        #chat-system { display: none; flex-shrink: 0; background: rgba(0,0,0,0.85); border-top: 2px solid rgba(255,255,255,0.2); z-index: 200; flex-direction: column; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        #chat-preview-bar { padding: 10px 15px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        #chat-expanded-area { display: none; flex-direction: column; height: 25vh; min-height: 180px; }
+        #chat-messages::-webkit-scrollbar { width: 6px; } #chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+        #settings-tab-content::-webkit-scrollbar { width: 8px; } #settings-tab-content::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        
+        #result-list { width: 95%; max-width: 450px; display:flex; flex-direction:column; gap:4px; padding: 10px; margin-top: 0; box-sizing: border-box; overflow: hidden; }
+
+        .setting-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.1); padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.1s, background 0.2s; margin-bottom: 10px; cursor: pointer; }
+        .setting-row:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
+        .setting-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .setting-icon { font-size: 20px; background: rgba(0,0,0,0.4); width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+        .setting-name { font-size: 18px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
+        .setting-desc-btn { background: rgba(255, 255, 255, 0.2); color: #fff; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: background 0.2s; }
+        .setting-desc-btn:hover { background: var(--secondary); }
+
+        #viewing-player-label { position: absolute; top: -35px; right: 10px; left: auto; background: rgba(255, 230, 109, 0.9); color: #000; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.5); display: none; }
+        #viewing-player-label.show { display: block; animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    </style>
+</head>
+<body>
+    <div id="bg-revolution"></div>
+
+    <div id="game-container">
+        <!-- 招待ダイアログ (URLパラメータから開いた時) -->
+        <div id="invite-popup" class="hidden" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+            <div class="glass-panel" style="width: 85%; max-width: 350px; text-align: center; padding: 30px 20px; border: 3px solid var(--accent); box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+                <h2 style="margin-top: 0; color: var(--accent); font-size: 22px;">💌 招待が届いています！</h2>
+                <p style="margin-bottom: 25px; font-weight: bold;">ルームID: <span id="invite-room-id-text" style="color:var(--secondary); font-size: 18px;"></span></p>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <button class="btn-green" style="font-size: 18px; padding: 15px; border-radius: 25px; box-shadow: 0 6px 0 #16a085;" onclick="window.acceptInvite('player')">🎮 参加する</button>
+                    <button class="btn-gray" style="font-size: 16px; padding: 12px; border-radius: 20px;" onclick="window.acceptInvite('spectator')">👁️ 観戦する</button>
+                    <button style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #ccc; box-shadow: none; margin-top: 10px;" onclick="window.closeInvitePopup()">キャンセル</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-active-rules" class="btn-green" style="position: absolute; top: 12px; left: 15px; width: 38px; height: 38px; border-radius: 50%; padding: 0; font-size: 18px; font-weight: 900; z-index: 1000; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.6);" onclick="window.showActiveRules()">📖</button>
+        <button id="btn-show-rules" class="btn-green" style="position: absolute; top: 12px; left: 60px; width: 38px; height: 38px; border-radius: 50%; padding: 0; font-size: 18px; font-weight: 900; z-index: 1000; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.6);" onclick="window.showFullRuleDesc()">🃏</button>
+        <div id="game-room-code" style="display:none; position:absolute; top:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); border:1px solid var(--accent); border-radius:10px; padding:4px 12px; font-size:16px; font-weight:900; color:var(--accent); letter-spacing:4px; font-family:monospace; z-index:1000; pointer-events:none; white-space:nowrap;">----</div>
+
+        <div id="turn-status-window" class="turn-window hidden">
+            <div class="turn-text-container">
+                <div id="tsw-name" class="turn-name">-</div>
+                <div id="tsw-text" class="turn-suffix">-</div>
+            </div>
+        </div>
+
+        <div id="active-rules-list-popup" class="hidden" style="position:absolute; top:60px; left:15px; width: 220px; background:rgba(0,0,0,0.9); border:2px solid var(--accent); border-radius:12px; z-index:4000; box-shadow:0 8px 24px rgba(0,0,0,0.8); display:flex; flex-direction:column; overflow:hidden;">
+            <div style="background:var(--accent); color:#000; font-size:14px; font-weight:900; padding:6px 10px; display:flex; justify-content:space-between; align-items:center;">
+                <span>採用ルール一覧</span>
+                <span style="cursor:pointer; font-size:16px; line-height:1;" onclick="document.getElementById('active-rules-list-popup').classList.add('hidden')">✖</span>
+            </div>
+            <div id="active-rules-content" style="max-height: 250px; overflow-y:auto; padding: 5px;"></div>
+        </div>
+
+        <div id="active-rule-detail-overlay" class="hidden" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9000; backdrop-filter: blur(2px);" onclick="window.closeRuleDetail()"></div>
+        <div id="active-rule-detail-popup" class="hidden" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 80%; max-width: 320px; background:rgba(20,20,20,0.95); border:3px solid var(--primary); border-radius:16px; z-index:9100; box-shadow:0 10px 30px rgba(0,0,0,0.9); text-align:center; padding: 20px;">
+            <h3 id="detail-rule-title" style="color:var(--primary); margin:0 0 10px 0; border-bottom:1px solid #555; padding-bottom:10px; font-size: 20px;">ルール名</h3>
+            <p id="detail-rule-desc" style="font-size:15px; color:#fff; text-align:left; line-height:1.5; font-weight:bold; margin-bottom:20px;"></p>
+            <button class="btn-green" style="padding: 8px 30px; font-size:16px; border-radius: 20px;" onclick="window.closeRuleDetail()">✖ 閉じる</button>
+        </div>
+
+        <!-- 遊び方とルール -->
+        <div id="full-rule-modal" class="hidden" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(20, 30, 48, 0.98); z-index:5000; display:flex; flex-direction:column; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+            <div style="padding:20px 10px 10px 10px; background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); text-align:center; font-size:22px; font-weight:900; color:white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">🃏 遊び方とルール</div>
+            <div style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:16px;">
+                <div class="glass-panel" style="padding: 15px; text-align: left;">
+                    <h3 style="color:var(--accent); margin:0 0 8px 0; font-size: 18px; text-align: left; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:5px;">1. ゲームの目的</h3>
+                    <p style="margin:0; font-size: 14px; line-height: 1.5; font-weight: bold;">手札を誰よりも早く出し切り、高い身分（大富豪）を目指すゲームです。</p>
+                </div>
+                <div class="glass-panel" style="padding: 15px; text-align: left;">
+                    <h3 style="color:var(--accent); margin:0 0 8px 0; font-size: 18px; text-align: left; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:5px;">2. カードの強さ</h3>
+                    <p style="margin:0 0 10px 0; font-size: 13px; line-height: 1.5; font-weight: bold;">数字の強さは一般的なゲームと異なり、<span style="color:#FF6B6B;">「2」が最強で「3」が最弱</span>です。<br><span style="font-size:11px; color:#ccc;">※ジョーカーは「2」よりも強い、唯一のワイルドカードです。</span></p>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-weight: 900; color: #fff; font-size: 12px; margin: 12px 0;">
+                        <span style="color:#95a5a6;">(弱)</span>
+                        <div class="rule-cards" style="display:flex; justify-content:center; align-items:center;">
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">3</span></div><span class="card-rank-center">3</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">4</span></div><span class="card-rank-center">4</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">5</span></div><span class="card-rank-center">5</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">6</span></div><span class="card-rank-center">6</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">7</span></div><span class="card-rank-center">7</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">8</span></div><span class="card-rank-center">8</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">9</span></div><span class="card-rank-center">9</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">10</span></div><span class="card-rank-center">10</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">J</span></div><span class="card-rank-center">J</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">Q</span></div><span class="card-rank-center">Q</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">K</span></div><span class="card-rank-center">K</span></div>
+                            <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">A</span></div><span class="card-rank-center">A</span></div>
+                            <div class="card black"><div class="card-top-left" style="color:var(--primary);"><span class="card-tl-suit">♠</span><span class="card-tl-rank">2</span></div><span class="card-rank-center" style="color:var(--primary);">2</span></div>
+                        </div>
+                        <span style="color:var(--primary);">(強)</span>
+                    </div>
+                </div>
+                <div class="glass-panel" style="padding: 15px; text-align: left;">
+                    <h3 style="color:var(--accent); margin:0 0 8px 0; font-size: 18px; text-align: left; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:5px;">3. 基本的な遊び方</h3>
+                    <ul style="margin:0; padding-left: 20px; font-size: 13px; line-height: 1.6; font-weight: bold; list-style: decimal;">
+                        <li style="margin-bottom:6px;"><span style="color:#4ECDC4;">カードを出す:</span> 親から順番にカードを出します。</li>
+                        <li style="margin-bottom:6px;"><span style="color:#4ECDC4;">より強いカードを出す:</span> 次の人は、場に出ているカードよりも<span style="color:var(--accent);">「同じ枚数」で「より強い数字」</span>を出さなければなりません。
+                            <ul style="padding-left:15px; list-style:circle; font-size:11px; color:#ddd; margin-top:4px;"><li>例：場に「5」が1枚なら、「6」以上のカードを1枚出す。</li><li>例：場に「7」が2枚（ペア）なら、「8」以上のペアを2枚出す。</li></ul>
+                        </li>
+                        <li style="margin-bottom:6px;"><span style="color:#4ECDC4;">パス:</span> 出せるカードがない、または戦略的に出したくない場合はパスができます。</li>
+                        <li><span style="color:#4ECDC4;">流れる:</span> 全員がパスし、最後にカードを出した人に順番が回ってきたら、その場のカードを「流し」ます。その人が新しい親となり、好きなカードから出せます。</li>
+                    </ul>
+                </div>
+                <div class="glass-panel" style="padding: 15px; text-align: left; margin-bottom: 20px;">
+                    <h3 style="color:var(--accent); margin:0 0 8px 0; font-size: 18px; text-align: left; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:5px;">4. 階級の決定とスコア・カード交換</h3>
+                    <p style="margin:0 0 8px 0; font-size: 13px; line-height: 1.5; font-weight: bold;">ゲームが終わった順位によって、スコア獲得と次回のゲームの「階級」が決まります。</p>
+                    <ul style="margin:0; padding-left: 20px; font-size: 13px; line-height: 1.6; font-weight: bold;">
+                        <li style="margin-bottom:4px;"><span style="color:#FFD700;">👑 大富豪 (1位):</span> <span style="color:#2ecc71;">+2点</span>。次回開始前、不要な2枚を渡し最強の2枚をもらえます。</li>
+                        <li style="margin-bottom:4px;"><span style="color:#bdc3c7;">💰 富豪 (2位):</span> <span style="color:#2ecc71;">+1点</span>。カード1枚を貧民と交換します。</li>
+                        <li style="margin-bottom:4px;"><span style="color:#2ecc71;">👤 平民 (中間):</span> 0点。交換はありません。</li>
+                        <li style="margin-bottom:4px;"><span style="color:#e67e22;">🗑 貧民 (下から2番目):</span> <span style="color:#e74c3c;">-1点</span>。交換します。</li>
+                        <li><span style="color:#c0392b;">💀 大貧民 (最下位):</span> <span style="color:#e74c3c;">-2点</span>。交換します。</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="padding:15px 20px 25px 20px; background:linear-gradient(to top, rgba(0,0,0,0.9), transparent); flex-shrink:0;">
+                <button onclick="document.getElementById('full-rule-modal').classList.add('hidden')" style="width:100%; font-size:18px; padding:16px; margin:0; border-radius:24px; background:var(--primary); box-shadow:0 6px 15px rgba(0,0,0,0.5); transition: transform 0.1s;">✖ 閉じる</button>
+            </div>
+        </div>
+
+        <div id="screens-wrapper">
+            <!-- Login -->
+            <div id="login-screen" class="screen active">
+                <h1 style="margin-top: 20px; margin-bottom: 5px;">大富豪</h1>
+                <div class="glass-panel" style="text-align:center; width: 85%; max-width: 340px; padding: 10px 16px;">
+                    <div id="user-info" style="font-weight:bold; margin-bottom:15px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        準備中...
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:12px; margin: 10px 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:bold; font-size:15px; text-shadow: 1px 1px 0px rgba(0,0,0,0.5);">👥 最大人数:</span>
+                            <select id="room-max-players" style="background:rgba(0,0,0,0.7); color:white; border:2px solid var(--accent); padding: 8px 12px; border-radius: 8px; outline:none; font-weight:bold; font-size: 14px; cursor: pointer;">
+                                <option value="2">2人</option>
+                                <option value="3">3人</option>
+                                <option value="4">4人</option>
+                                <option value="5" selected>5人</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:bold; font-size:15px; text-shadow: 1px 1px 0px rgba(0,0,0,0.5);">🚪 公開設定:</span>
+                            <select id="room-permission" style="background:rgba(0,0,0,0.7); color:white; border:2px solid var(--accent); padding: 8px 12px; border-radius: 8px; outline:none; font-weight:bold; font-size: 14px; cursor: pointer;">
+                                <option value="0">公開 (パブリック)</option>
+                                <option value="1">非公開 (プライベート)</option>
+                            </select>
+                        </div>
+                        <button id="btn-create-room" style="margin-top: 15px; padding: 12px; font-size: 18px;">👑 ルーム作成</button>
+                    </div>
+                </div>
+
+                <div style="width: 85%; max-width: 350px; margin-top: 6px; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" id="input-join-id" placeholder="コード例: 1234" maxlength="60" style="flex:1; min-width: 0; padding: 10px 12px; border-radius: 20px; border: 2px solid var(--accent); background: rgba(0,0,0,0.6); color: white; outline: none; font-weight: bold; font-size: 15px; letter-spacing:2px; text-transform:uppercase; text-align:center;" oninput="this.value=this.value.toUpperCase()">
+                        <button class="btn-green" style="margin:0; padding: 10px 15px; border-radius: 20px; white-space: nowrap; font-size: 13px;" onclick="window.joinRoomById('player')">参加</button>
+                        <button class="btn-gray" style="margin:0; padding: 10px 15px; border-radius: 20px; white-space: nowrap; font-size: 13px;" onclick="window.joinRoomById('spectator')">観戦</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; width: 90%; max-width: 450px; margin-top:8px; margin-bottom: 4px;">
+                    <h3 style="margin:0; font-size: 1.2rem;">公開ルームリスト</h3>
+                    <button id="btn-refresh-rooms" class="btn-green" style="margin:0; padding:5px 15px; font-size:14px;">🔄 更新</button>
+                </div>
+                <div id="room-list" class="room-list glass-panel"></div>
+            </div>
+
+            <!-- Lobby -->
+            <div id="lobby-screen" class="screen">
+                <h2 style="margin-top:4px; margin-bottom:4px;">ロビー</h2>
+                <!-- プレイヤー一覧（上部・全員表示） -->
+                <div id="lobby-players" style="width:95%; max-width:520px; margin:0 auto 4px auto;"></div>
+                <!-- 下部2カラム操作エリア -->
+                <div style="display:flex; gap:8px; width:95%; max-width:520px; margin:0 auto 4px auto; align-items:flex-start;">
+                    <!-- 左カラム: 部屋コード＋CPU設定 -->
+                    <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                        <div class="glass-panel" style="padding:8px 10px; text-align:center;">
+                            <div style="font-size:10px; color:#aaa; font-weight:bold; margin-bottom:2px;">🔑 部屋コード</div>
+                            <div id="lobby-short-code" style="font-size:22px; font-weight:900; letter-spacing:6px; color:var(--accent); font-family:monospace;">----</div>
+                            <div id="lobby-player-count" style="font-size:12px; font-weight:900; color:#fff; margin-top:2px;">👥 - / - 人</div>
+                            <div style="font-size:11px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:12px; cursor:pointer; margin-top:4px; border:1px solid var(--accent);" onclick="window.copyInviteLink()">📋 招待コードをコピー</div>
+                        </div>
+                        <div id="lobby-cpu-settings" class="glass-panel" style="padding:8px 10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <span style="font-weight:bold; font-size:13px;">🤖 CPU参戦</span>
+                                <label class="switch" style="transform:scale(0.75); margin:0;"><input type="checkbox" id="lobby-cpu-toggle" onchange="window.toggleCpuHost(this.checked)"><span class="slider"></span></label>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:bold; font-size:12px; color:#ddd;">🎚️ 難易度</span>
+                                <select id="lobby-cpu-diff" onchange="window.setCpuDiffHost(this.value)" style="background:rgba(0,0,0,0.6); color:#fff; font-size:12px; font-weight:bold; border:1px solid var(--accent); padding:4px 8px; border-radius:6px; outline:none;">
+                                    <option value="beginner">初級</option>
+                                    <option value="intermediate" selected>中級</option>
+                                    <option value="advanced">上級</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 右カラム: ルール設定＋メッセージ＋ボタン -->
+                    <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                        <button id="btn-open-settings" class="hidden" style="font-size:13px; padding:10px; margin:0; background:var(--secondary); border-radius:14px; box-shadow:0 4px 0 #16a085; font-weight:900; width:100%;" onclick="window.openHostSettings()">⚙️ ルール設定</button>
+                        <div id="non-host-status-box" class="glass-panel hidden" style="padding:8px 10px; text-align:center;">
+                            <div id="non-host-status-text" style="font-size:12px; font-weight:bold; color:#fff; margin-bottom:6px;">オーナーが設定中...</div>
+                            <button onclick="window.openReadOnlySettings()" style="font-size:11px; padding:5px 10px; background:#34495e; margin:0;">📖 ルール確認</button>
+                        </div>
+                        <div id="host-msg" style="background:rgba(0,0,0,0.6); color:white; padding:6px 10px; border-radius:10px; font-weight:bold; font-size:12px; text-align:center;"></div>
+                        <button id="btn-start-game" class="hidden" style="font-size:18px; padding:14px; margin:0; width:100%; border-radius:16px;">🎮 ゲーム開始！</button>
+                        <button id="btn-leave-room" class="btn-gray" style="font-size:14px; padding:10px; margin:0; width:100%; border-radius:14px;" onclick="window.leaveRoom(true)">🚪 退室</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game -->
+            <div id="game-screen" class="screen">
+                <div id="persistent-status-panel">
+                    <div id="game-round-badge" style="background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 12px; border: 1px solid var(--accent); margin-bottom: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">Round: 1</div>
+                    <div id="badge-rev" class="status-badge badge-rev">🔥 革命中！</div>
+                    <div id="badge-jback" class="status-badge badge-jback">✨ Jバック中！</div>
+                    <div id="badge-bind" class="status-badge badge-bind">🔗 マーク縛り: <span id="bind-suit-text"></span></div>
+                    <div id="badge-kaidan" class="status-badge badge-kaidan">📈 階段(数)縛り中！</div>
+                    <div id="badge-revdir" class="status-badge badge-revdir">🔄 逆回り</div>
+                </div>
+
+                <div class="players-area" id="players-area"></div>
+                
+                <div class="board-area">
+                    <div class="played-cards-wrapper">
+                        <div class="history-cards-container" id="history-cards"></div>
+                        <div class="played-cards" id="board-cards"></div>
+                    </div>
+                    <div id="action-anim-text"></div>
+                </div>
+
+                <div id="turn-popup-text" class="hidden">あなたの番です</div>
+                <div id="spectator-notify-text" class="hidden">👀 他の人の手札を見れるよ！</div>
+
+                <div id="special-action-window" class="glass-panel hidden" style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); z-index: 250; text-align: center; width: 90%; min-width: 250px; max-width: 320px; border: 3px solid var(--active-glow); box-shadow: 0 10px 30px rgba(0,229,255,0.4); background: rgba(0,0,0,0.85); flex-direction: column; gap: 10px;">
+                    <div id="special-action-content"></div>
+                </div>
+
+                <div class="hand-area" id="hand-area-container">
+                    <div id="viewing-player-label" style="cursor:pointer;" onclick="window.spectatorChangePick()">👁️ <span id="vlabel-name"></span> の手札　<span style="font-size:10px;color:#aaa;">▼変更</span></div>
+                    <div id="my-status-wrapper" style="position: absolute; bottom: calc(100% + 8px); left: 10px; display: flex; align-items: center; gap: 12px; z-index: 20; pointer-events: none;">
+                        <div id="my-status-area" style="display:none; pointer-events: auto;"></div>
+                        <div id="global-turn-timer" style="pointer-events: auto;"><div class="timer-label">TIME</div><span id="g-timer-sec">60</span></div>
+                    </div>
+
+                    <div class="controls-container" id="normal-controls">
+                        <div class="controls">
+                            <div style="display:flex; flex-direction:column; align-items:center; margin-right: 2px;">
+                                <span style="font-size:9px; font-weight:bold; color:#fff; margin-bottom:2px; text-shadow: 1px 1px 1px #000;">自動パス</span>
+                                <label class="switch" style="margin: 0; transform: scale(0.65);"><input type="checkbox" id="toggle-auto-pass" checked><span class="slider"></span></label>
+                            </div>
+                            <button id="btn-play" disabled>出す</button>
+                            <button id="btn-pass" class="btn-gray" disabled>パス</button>
+                            <button id="btn-clear">✖</button>
+                        </div>
+                    </div>
+                    <div class="hand-cards" id="my-hand"></div>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div id="result-screen" class="screen">
+                <div id="result-list" class="glass-panel" style="max-height: 80vh; overflow-y: auto;"></div>
+                <div style="display:flex; justify-content:center; gap:10px; align-items:center; margin-top: 10px; margin-bottom:10px; z-index:50;">
+                    <button id="btn-next-round" class="hidden" style="font-size: 16px; padding: 10px 20px;">▶ 次のラウンドへ</button>
+                    <button id="btn-end-game" class="hidden" style="font-size: 14px; padding: 10px 16px;" onclick="window.leaveRoom(true)">🛑 解散</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="host-settings-modal" class="hidden" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(20, 30, 48, 0.98); z-index:2000; display:flex; flex-direction:column; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+            <div id="host-settings-title" style="padding:20px 10px 10px 10px; background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); text-align:center; font-size:22px; font-weight:900; color:white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">⚙️ ルール設定</div>
+            <div id="settings-tabs" style="display:flex; overflow-x:auto; background:rgba(0,0,0,0.3); padding:10px 8px 0 8px; flex-shrink:0; gap:6px; justify-content:center; border-bottom: 2px solid rgba(255,255,255,0.1);">
+                <button id="tab-btn-base" class="tab-btn" onclick="window.openSettingTab('base')" style="flex:1; margin:0; padding:12px 5px; font-size:14px; font-weight:900; border-radius:12px 12px 0 0; border:none; transition:all 0.2s;">基本</button>
+                <button id="tab-btn-special1" class="tab-btn" onclick="window.openSettingTab('special1')" style="flex:1; margin:0; padding:12px 5px; font-size:14px; font-weight:900; border-radius:12px 12px 0 0; border:none; transition:all 0.2s;">特殊①</button>
+                <button id="tab-btn-bind" class="tab-btn" onclick="window.openSettingTab('bind')" style="flex:1; margin:0; padding:12px 5px; font-size:14px; font-weight:900; border-radius:12px 12px 0 0; border:none; transition:all 0.2s;">縛り</button>
+                <button id="tab-btn-kinshi" class="tab-btn" onclick="window.openSettingTab('kinshi')" style="flex:1; margin:0; padding:12px 5px; font-size:14px; font-weight:900; border-radius:12px 12px 0 0; border:none; transition:all 0.2s;">禁止あがり</button>
+            </div>
+            <div id="settings-tab-content" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; background:transparent;"></div>
+            <div style="padding:15px 20px 25px 20px; background:linear-gradient(to top, rgba(0,0,0,0.9), transparent); flex-shrink:0;"><button id="host-settings-confirm-btn" onclick="window.confirmHostSettings()" style="width:100%; font-size:18px; padding:16px; margin:0; border-radius:24px; box-shadow:0 6px 15px rgba(0,0,0,0.5); transition: transform 0.1s;">✅ 設定を確定する</button></div>
+        </div>
+
+        <div id="rule-desc-popup" class="hidden" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:85%; max-width:400px; background:rgba(20,30,48,0.98); border:3px solid var(--accent); border-radius:20px; padding:20px; z-index:3000; box-shadow:0 10px 40px rgba(0,0,0,0.9); text-align:center;">
+            <h2 id="rule-desc-title" style="color:var(--accent); font-size:22px; margin-top:0; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:10px;">ルール名</h2>
+            <p id="rule-desc-text" style="font-size:15px; line-height:1.6; font-weight:900; color:#fff; text-align:left; margin:15px 0;"></p>
+            <button onclick="document.getElementById('rule-desc-popup').classList.add('hidden')" style="font-size:16px; padding:12px 40px; background:var(--primary); border-radius:24px; width: 80%;">✖ 閉じる</button>
+        </div>
+
+        <div id="chat-system">
+            <div id="chat-preview-bar">
+                <div style="flex: 1; font-size: 13px; color: #eee; overflow: hidden; text-overflow: ellipsis; white-space:nowrap;"><span id="chat-preview-text">💬 <span style="color: #aaa;">メッセージはありません</span></span></div>
+                <div id="chat-unread-badge" style="background: #e74c3c; color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: bold; margin-right: 8px; display: none;">0</div>
+                <button id="btn-chat-toggle" style="margin: 0; padding: 4px 10px; font-size: 11px; background: var(--secondary); border-radius: 12px;">開く</button>
+            </div>
+            <div id="chat-expanded-area">
+                <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+                <div style="display: flex; padding: 8px; background: rgba(0,0,0,0.5); gap: 5px;">
+                    <input type="text" id="chat-input-text" placeholder="メッセージを入力..." style="flex: 1; padding: 8px 12px; border-radius: 20px; border: none; outline: none;">
+                    <button id="btn-chat-send" style="margin: 0; padding: 8px 16px; font-size: 13px; border-radius: 20px;">送信</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+function showToast(msg, isError=false) {
+    const toast = document.createElement('div'); 
+    toast.style.cssText = `position:absolute; top:40%; left:50%; transform:translate(-50%, -50%); background:${isError?'rgba(231, 76, 60, 0.95)':'rgba(46, 204, 113, 0.95)'}; color:white; padding:15px 30px; font-size:16px; font-weight:900; border-radius:30px; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation:popIn 2.5s forwards; text-align:center; width: max-content; max-width: 80%; white-space:pre-wrap;`; 
+    toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2500);
+}
+
+function initLayout() {
+    const topExclusionHeight = window.innerHeight >= 812 ? 98 : 74;
+    document.documentElement.style.setProperty('--top-offset', topExclusionHeight + 'px');
+}
+window.addEventListener('resize', () => { initLayout(); resolveUILayout(); }, {passive: true});
+document.addEventListener('DOMContentLoaded', () => setTimeout(initLayout, 100));
+initLayout();
+
+let touchStartY = 0; let touchStartX = 0;
+document.addEventListener('touchstart', e => { if(e.touches.length === 1) { touchStartY = e.touches[0].clientY; touchStartX = e.touches[0].clientX; } }, {passive: true});
+document.addEventListener('touchmove', function(e) {
+    const scrollable = e.target.closest('.room-list, #chat-messages, #settings-tab-content, #active-rules-content, .hand-cards, #lobby-players, .hist-table-container, #full-rule-modal > div:nth-child(2), #result-list');
+    if (!scrollable) { e.preventDefault(); return; }
+    if (scrollable.classList.contains('hand-cards') || scrollable.classList.contains('hist-table-container')) {
+        const touchEndY = e.touches[0].clientY; const touchEndX = e.touches[0].clientX;
+        if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX)) e.preventDefault(); 
+        else { const isPullingLeft = touchStartX < touchEndX; const isPullingRight = touchStartX > touchEndX; if (isPullingLeft && scrollable.scrollLeft <= 0) e.preventDefault(); else if (isPullingRight && scrollable.scrollLeft + scrollable.clientWidth >= scrollable.scrollWidth - 1) e.preventDefault(); }
+        return;
+    }
+    const touchEndY = e.touches[0].clientY; const isPullingDown = touchStartY < touchEndY; const isPullingUp = touchStartY > touchEndY;
+    if (isPullingDown && scrollable.scrollTop <= 0) e.preventDefault(); else if (isPullingUp && scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1) e.preventDefault(); 
+}, { passive: false });
+
+const SUITS = ['S', 'H', 'D', 'C']; const SUIT_MARKS = {'S':'♠', 'H':'♥', 'D':'♦', 'C':'♣'}; const RANKS = [3,4,5,6,7,8,9,10,11,12,13,1,2]; 
+const RANK_NAMES = ["大富豪👑", "富豪💰", "平民👤", "貧民🗑", "大貧民💀"]; const RANK_NAMES_CLEAN = ["大富豪", "富豪", "平民", "貧民", "大貧民"]; const RANK_SCORES = { 0: 2, 1: 1, 2: 0, 3: -1, 4: -2 };
+
+const DEFAULT_RULES = {
+    totalRounds: 3, cardExchange: true, miyakoOchi: true, gekokujo: false, 
+    eightGiri: true, sevenPass: true, tenDiscard: true, jBack: true, fiveSkip: true, nineReverse: false, twelveBomber: false, spade3: true, revolution: true, 
+    suitBind: true, kaidanBind: true, 
+    kinshi2: true, kinshiRev3: true, kinshiJoker: true, kinshiSp3: false, kinshi8: true, kinshi11: false, kinshi7: false, kinshi10: false, kinshi12: false, 
+    cpuEnabled: false, cpuDifficulty: 'intermediate'
+};
+const TABS = { base: ['totalRounds', 'cardExchange', 'miyakoOchi', 'gekokujo'], special1: ['eightGiri', 'sevenPass', 'tenDiscard', 'jBack', 'fiveSkip', 'nineReverse', 'twelveBomber', 'spade3', 'revolution'], bind: ['suitBind', 'kaidanBind'], kinshi: ['kinshi2', 'kinshiRev3', 'kinshiJoker', 'kinshiSp3', 'kinshi8', 'kinshi11', 'kinshi7', 'kinshi10', 'kinshi12'] };
+const RULE_LABELS = { totalRounds: "総ラウンド数", cardExchange: "カード交換", miyakoOchi: "都落ち", gekokujo: "下剋上", revolution: "革命・階段革命", eightGiri: "8切り", jBack: "11バック", spade3: "スペ3返し", suitBind: "マーク縛り", kaidanBind: "階段縛り(連番)", nineReverse: "9リバース", fiveSkip: "5スキップ", sevenPass: "7渡し", tenDiscard: "10捨て", twelveBomber: "12ボンバー", kinshi2: "2あがり", kinshiRev3: "革命時3あがり", kinshiJoker: "ジョーカーあがり", kinshiSp3: "スペ3あがり", kinshi8: "8切りあがり", kinshi11: "11バックあがり", kinshi7: "7渡しあがり", kinshi10: "10捨てあがり", kinshi12: "12ボンバーあがり" };
+const RULE_DESC = { totalRounds: "ゲームの総ラウンド数を設定します。指定ラウンド終了時に最終結果が表示されます。", cardExchange: "ゲーム開始時、大富豪は2枚、富豪は1枚、下位のプレイヤーとカード交換します。", miyakoOchi: "大富豪が1位で上がれなかった場合、その瞬間に「大貧民」へ転落（都落ち）します。", gekokujo: "大貧民が1位で上がると「下剋上」！次ラウンドの全員の階級が完全に逆転します。", revolution: "同じ数字を4枚以上出すと「革命」！強さが完全に逆転します。さらに4枚出すと「革命返し」となります。", eightGiri: "「8」を含むカードを出すと、そのターンの場が強制的に流れ、出した人が続けてカードを出せます。", jBack: "「11(J)」を出すと、そのターンのみ一時的にカードの強さが逆転します。", spade3: "単体で出された「ジョーカー」に対してのみ、「スペードの3」を出して勝つことができます。", suitBind: "前のプレイヤーのカードと完全に同じ「マーク」の組み合わせを出すと、以降その場が流れるまで同じマークしか出せなくなります。", kaidanBind: "前のカードに対して「連番」になるように出すと、以降連番となる数字しか出せなくなります。", nineReverse: "「9」を出すと、プレイの順番が「逆回り」になります。", fiveSkip: "「5」を出した枚数分だけ、次の人の順番をスキップ（飛ばす）します。", sevenPass: "「7」を出すと、出した枚数分だけ自分の手札から好きなカードを次の人に渡せます。", tenDiscard: "「10」を出すと、出した枚数分だけ手札から好きなカードを捨てることができます。", twelveBomber: "「12(Q)」を出すと、数字を1つ指定し、全員の手札からその数字を爆破（消滅）させます。", kinshi2: "「2」を最後に出して上がると反則負けになります。", kinshiRev3: "革命状態の時に、最弱となった「3」を最後に出して上がると反則負けになります。", kinshiJoker: "「ジョーカー」を最後に出して上がると反則負けになります。", kinshiSp3: "「スペードの3」をジョーカーの返しとして最後に出して上がると反則負けになります。", kinshi8: "「8」を最後に出して上がると反則負けになります。", kinshi11: "「11(J)」を最後に出して上がると反則負けになります。", kinshi7: "「7」の渡し効果で手札をゼロにして上がると反則負けになります。", kinshi10: "「10」の捨て効果で手札をゼロにして上がると反則負けになります。", kinshi12: "「12(Q)」の爆破効果で自分の手札がゼロになり上がると反則負けになります。" };
+
+// ===== 短縮コード管理 =====
+const roomCodeMap = {};
+function generateShortCode() {
+    return String(Math.floor(1000 + Math.random() * 9000));
+}
+function resolveRoomId(input) {
+    const upper = input.toUpperCase();
+    for (const [rid, code] of Object.entries(roomCodeMap)) {
+        if (code === upper) return rid;
+    }
+    return input;
+}
+
+let me = { id: 'u_' + Math.floor(Math.random()*10000000), name: 'ゲスト', portrait: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + Math.random() };
+let isHost = false, currentRoomId = ''; let maxRoomPlayers = 5; let myRole = 'player'; let viewingPlayerId = null; 
+window.autoPassTriggeredForTurn = false; window.myTurnState = false; window.isProcessingClient = false; 
+let chatUnreadCount = 0, isChatExpanded = false; let turnTimerInterval = null; let lobbySyncInterval = null;
+let clientTimerInterval = null; let currentClientTurnTime = 60; let lastSyncTurnTime = 60; let clientTimerActivePlayerId = null;
+let prevBoardCardIds = []; let inviteRoomIdPending = null;
+
+let clientState = { phase: 'LOBBY', history: [], rules: {...DEFAULT_RULES}, players: [], turnIdx: 0, direction: 1, board: { cards: [], type: 'none', strength: 0, suit: [] }, historyCards: [], isRev: false, isJBack: false, bindSuits: [], isKaidanBind: false, round: 1, interaction: null, exchange: null, isDelaying: false, lastAction: null, passCount: 0 };
+let hostState = null; let selectedCards = [];
+
+window.joinRoomById = function(role) {
+    const raw = document.getElementById('input-join-id').value.trim().toUpperCase();
+    if(!raw) return showToast("コードまたはルームIDを入力してください", true);
+    joinRoom(resolveRoomId(raw), role || 'player');
+};
+window.copyInviteLink = function() {
+    const sc = isHost ? (hostState && hostState.shortCode) : (clientState && clientState.shortCode);
+    if(!sc) return showToast("部屋コードがまだ生成されていません", true);
+    navigator.clipboard.writeText(sc)
+        .then(() => showToast('📋 招待コードをコピーしました！\nコード: ' + sc))
+        .catch(() => showToast("コピー失敗"));
+};
+window.acceptInvite = function(role) { document.getElementById('invite-popup').classList.add('hidden'); if(inviteRoomIdPending) { joinRoom(inviteRoomIdPending, role); inviteRoomIdPending = null; } };
+window.closeInvitePopup = function() { document.getElementById('invite-popup').classList.add('hidden'); inviteRoomIdPending = null; };
+
+const DOM = { screens: { login: document.getElementById('login-screen'), lobby: document.getElementById('lobby-screen'), game: document.getElementById('game-screen'), result: document.getElementById('result-screen') }, animText: document.getElementById('action-anim-text'), lobbyPlayers: document.getElementById('lobby-players'), playersArea: document.getElementById('players-area'), boardCards: document.getElementById('board-cards'), historyCards: document.getElementById('history-cards'), myHand: document.getElementById('my-hand'), btnPlay: document.getElementById('btn-play'), btnPass: document.getElementById('btn-pass'), badgeRev: document.getElementById('badge-rev'), badgeJBack: document.getElementById('badge-jback'), badgeRevDir: document.getElementById('badge-revdir'), badgeBind: document.getElementById('badge-bind'), badgeKaidan: document.getElementById('badge-kaidan') };
+const UI = { switchScreen: (name) => { Object.values(DOM.screens).forEach(s => s.classList.remove('active')); DOM.screens[name].classList.add('active'); if (name === 'game') setTimeout(initLayout, 50); }, showActionAnim: (text) => { DOM.animText.innerText = text; DOM.animText.classList.remove('anim-pop'); void DOM.animText.offsetWidth; DOM.animText.classList.add('anim-pop'); } };
+
+window.showFullRuleDesc = function() { document.getElementById('full-rule-modal').classList.remove('hidden'); };
+function showCentralTurnPopup() { const p = document.getElementById('turn-popup-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 1000); }
+function showSpectatorNotify() { const p = document.getElementById('spectator-notify-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 3000); }
+function resolveUILayout() { initLayout(); }
+function formatTime(ts) { if(!ts) return "不明"; const d = new Date(ts * 1000); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+
+async function initGame() {
+    try { window.AgentSDK.room.receiveMessage(handleNetworkMessage); } catch(e) {}
+    try { const res = await window.AgentSDK.user.getMyUserInfo(); if(res.errno === 0) { me = { id: String(res.data.user_id), name: res.data.name, portrait: res.data.portrait }; } } catch(e) {}
+    document.getElementById('user-info').innerHTML = `<img src="${me.portrait}" style="width:36px; height:36px; border-radius:50%; vertical-align:middle; margin-right:10px; border:2px solid var(--accent); background:#fff; object-fit:cover;" loading="lazy" decoding="async"> <span style="font-size:20px;">${me.name} さん</span>`;
+    
+    try { await refreshRooms(); } catch(e) {}
+    
+    const params = new URLSearchParams(window.location.search);
+    inviteRoomIdPending = params.get('roomId');
+    
+    try {
+        const rm = await window.AgentSDK.room.getRoomId();
+        if(rm && rm.room_id) {
+            isHost = false; currentRoomId = rm.room_id; myRole = 'player';
+            enterLobby();
+            window.AgentSDK.room.join({ room_id: rm.room_id }).catch(()=>{});
+            const syncReq = {type: 'SYNC_REQUEST', userId: me.id, userName: me.name, portrait: me.portrait, role: myRole};
+            sendMsg(syncReq); setTimeout(() => sendMsg(syncReq), 500); setTimeout(() => sendMsg(syncReq), 1500); setTimeout(() => sendMsg(syncReq), 3000);
+            return; 
+        }
+    } catch(e) {}
+    
+    // 短縮コードキャッシュ登録
+    const paramCode = params.get('code');
+    if (inviteRoomIdPending && paramCode) roomCodeMap[inviteRoomIdPending] = paramCode.toUpperCase();
+    // 招待リンク自動参加
+    if(inviteRoomIdPending && currentRoomId !== inviteRoomIdPending) {
+        showToast("🔗 招待リンクから自動参加中...");
+        setTimeout(() => joinRoom(inviteRoomIdPending, 'player'), 800);
+        inviteRoomIdPending = null;
+    }
+}
+
+async function refreshRooms() {
+    const rl = document.getElementById('room-list'); rl.innerHTML = '<div style="padding: 30px; text-align: center; color: #fff; font-weight: bold;">🔄 更新中...</div>';
+    try {
+        const res = await window.AgentSDK.room.getPublicRoomList(); rl.innerHTML = '';
+        if(res.errno === 0 && res.data && res.data.list && res.data.list.length > 0) {
+            const now = Math.floor(Date.now() / 1000); let c = 0;
+            res.data.list.forEach(r => { 
+                if (r.create_time && (now - r.create_time) >= 3600) return;
+                c++; const tStr = r.create_time ? formatTime(r.create_time) : "不明";
+                const div = document.createElement('div'); div.className = 'room-item';
+                div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 2px dashed rgba(255,255,255,0.3);';
+                const rsc = (roomCodeMap[r.room_id] = roomCodeMap[r.room_id] || generateShortCode());
+                div.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px; text-align:left; flex:1;"><div style="display:flex; align-items:center; gap:8px;"><span style="font-size:20px; font-weight:900; letter-spacing:3px; color:var(--accent); font-family:monospace; background:rgba(0,0,0,0.5); padding:1px 8px; border-radius:6px; border:1px solid var(--accent);">${rsc}</span><span style="font-size:12px; color:#ddd;">👤 ${r.gamer_num}/${r.max_players}人</span></div><span style="font-size:10px; color:#aaa;">🕒 ${tStr}</span></div><div style="display:flex; flex-direction:column; gap:5px;"><button class="btn-green" style="padding: 5px 10px; font-size: 13px; margin:0;" onclick="joinRoom('${r.room_id}', 'player')">参加</button><button class="btn-gray" style="padding: 5px 10px; font-size: 13px; margin:0;" onclick="joinRoom('${r.room_id}', 'spectator')">👁️観戦</button></div>`;
+                rl.appendChild(div);
+            });
+            if (c === 0) rl.innerHTML = '<div style="padding: 20px; text-align: center; font-size: 14px; font-weight:bold; color: #ddd;">公開ルームはありません。<br>新しく作成してみましょう！</div>';
+        } else { rl.innerHTML = '<div style="padding: 20px; text-align: center; font-size: 14px; font-weight:bold; color: #ddd;">公開ルームはありません。<br>新しく作成してみましょう！</div>'; }
+    } catch(e) { rl.innerHTML = '<div style="padding: 20px; text-align: center; font-size: 14px; font-weight:bold; color: #ddd;">取得に失敗しました。</div>'; }
+}
+
+async function createRoom() {
+    const maxPlayers = parseInt(document.getElementById('room-max-players').value, 10);
+    const permission = parseInt(document.getElementById('room-permission').value, 10);
+    myRole = 'player'; 
+    try {
+        const res = await window.AgentSDK.room.create({ max_players: maxPlayers, room_permission: permission });
+        if(res.errno === 0) { 
+            isHost = true; currentRoomId = res.data.room_id; maxRoomPlayers = maxPlayers; 
+            setupHostState(); hostState.maxPlayers = maxPlayers;
+            const newSc = generateShortCode(); roomCodeMap[currentRoomId] = newSc; hostState.shortCode = newSc;
+            addPlayerToHost({...me, role: myRole});
+            enterLobby(); broadcastState(); 
+        } else { showToast("ルーム作成エラー: " + res.errmsg, true); }
+    } catch(e) { showToast("ルーム作成に失敗しました。", true); }
+}
+
+async function joinRoom(id, role) {
+    myRole = role || 'player';
+    try {
+        const res = await window.AgentSDK.room.join({ room_id: id });
+        if(res.errno === 0) { 
+            isHost = false; currentRoomId = id; 
+            if(res.data && res.data.user_list) {
+                clientState.phase = 'LOBBY';
+                clientState.players = res.data.user_list.map(u => ({ id: String(u.user_id), name: u.name || 'プレイヤー', portrait: u.portrait || u.portait || 'https://api.dicebear.com/7.x/bottts/svg?seed='+Math.random(), isHost: false, isReady: true, role: 'player' }));
+                if(!clientState.players.find(p=>p.id===me.id)) clientState.players.push({id: me.id, name: me.name, portrait: me.portrait, isHost: false, isReady: true, role: myRole});
+                updateClientState(clientState);
+            }
+            enterLobby(); 
+            const syncReq = {type: 'SYNC_REQUEST', userId: me.id, userName: me.name, portrait: me.portrait, role: myRole};
+            sendMsg(syncReq); setTimeout(() => sendMsg(syncReq), 500); setTimeout(() => sendMsg(syncReq), 1500); setTimeout(() => sendMsg(syncReq), 3000);
+        } else { showToast(res.errmsg || "ルームに参加できませんでした。", true); refreshRooms(); }
+    } catch(e) { showToast("参加できませんでした。", true); refreshRooms(); }
+}
+
+window.leaveRoom = async function(isManual = false) { 
+    if(isManual && currentRoomId) sendMsg({type: 'LEAVE_ROOM', userId: me.id});
+    if(turnTimerInterval) clearInterval(turnTimerInterval); if(lobbySyncInterval) clearInterval(lobbySyncInterval); if(clientTimerInterval) clearInterval(clientTimerInterval);
+    try { await window.AgentSDK.room.exit(); } catch(e){} 
+    currentRoomId = ''; isHost = false; hostState = null; const _gcEl = document.getElementById('game-room-code'); if(_gcEl) _gcEl.style.display = 'none'; 
+    document.getElementById('chat-system').style.display = 'none'; document.getElementById('global-turn-timer').classList.remove('show');
+    UI.switchScreen('login'); refreshRooms(); 
+};
+
+function handleNetworkMessage(p) {
+    try {
+        if(isHost && p.type === 'aitools_game_joinroom') { 
+            const pId = String(p.data.user_id); const pName = p.data.user_name || 'ゲスト'; const pPort = p.data.portrait || p.data.portait || `https://api.dicebear.com/7.x/bottts/svg?seed=${pId}`;
+            const ex = hostState.players.find(x => x.id === pId);
+            if(ex && ex.status !== 'abandoned') { ex.disconnected = false; ex.name = pName; ex.portrait = pPort;
+                const hostPlayer = hostState.players.find(x=>x.isHost);
+                const hostName = hostPlayer ? hostPlayer.name : '';
+                sendMsg({type: 'CHAT', senderId: 'system', sender: 'SYSTEM', text: `${pName} が復帰しました${hostName ? '　👑 ホスト: ' + hostName : ''}`}); } 
+            else if (!ex) { addPlayerToHost({id: pId, name: pName, portrait: pPort, role: 'player'}); sendMsg({type: 'CHAT', senderId: 'system', sender: 'SYSTEM', text: `${pName} が参加しました`}); }
+            broadcastState(); 
+        }
+        else if(isHost && p.type === 'aitools_game_exitroom') { 
+            const id = String(p.data.user_id); const ex = hostState.players.find(x=>x.id===id);
+            if(hostState.phase === 'LOBBY' || hostState.phase === 'RESULT') hostState.players = hostState.players.filter(x=>x.id!==id);
+            else if(ex && ex.status !== 'abandoned') { ex.disconnected = true; sendMsg({type: 'CHAT', senderId: 'system', sender: 'SYSTEM', text: `${ex.name} が離脱しました`}); }
+            if(ex && ex.isHost) {
+                ex.isHost = false;
+                const nextHost = hostState.players.find(p => !p.isCpu && !p.disconnected && p.status !== 'abandoned' && p.id !== id);
+                if(nextHost) { nextHost.isHost = true; sendMsg({type:'CHAT',senderId:'system',sender:'SYSTEM',text:`👑 ${nextHost.name} がホストになりました`}); }
+            }
+            broadcastState();
+        }
+        else if(p.type === 'aitools_game_sendmsg') {
+            const msg = JSON.parse(p.data.msg_data);
+            if(msg.type === 'SYNC') updateClientState(msg.state);
+            else if(msg.type === 'ANIM') UI.showActionAnim(msg.text);
+            else if(msg.type === 'ANIM_WIN') showRankWinAnim(msg.name, msg.rank);
+            else if(isHost && msg.type === 'ACTION') processAction(String(p.data.user_id), msg.action);
+            else if(isHost && msg.type === 'LEAVE_ROOM') {
+                const ex = hostState.players.find(x => x.id === msg.userId);
+                if(ex) {
+                    if(hostState.phase === 'LOBBY' || hostState.phase === 'RESULT') hostState.players = hostState.players.filter(x => x.id !== msg.userId);
+                    else { ex.status = 'abandoned'; ex.disconnected = true; ex.hand = []; sendMsg({type: 'CHAT', senderId: 'system', sender: 'SYSTEM', text: `${ex.name} が退室(棄権)しました`}); if(hostState.turnIdx === hostState.players.indexOf(ex)) checkTurnAdvance(); checkGameEnd(); }
+                    broadcastState();
+                }
+            }
+            else if(isHost && msg.type === 'SYNC_REQUEST') { 
+                const ex = hostState.players.find(x => x.id === msg.userId);
+                if (!ex && msg.userId && msg.userId !== me.id) { addPlayerToHost({id: msg.userId, name: msg.userName || 'ゲスト', portrait: msg.portrait, role: msg.role || 'player'}); sendMsg({type: 'CHAT', senderId: 'system', sender: 'SYSTEM', text: `${msg.userName || 'ゲスト'} が${msg.role==='spectator'?'観戦者として':''}参加しました`}); } 
+                else if(ex && ex.status !== 'abandoned') { ex.role = msg.role || ex.role; ex.disconnected = false; }
+                broadcastState();
+                // ゲーム中の復帰の場合、現在フェーズを含む完全なstateを送信
+                if(hostState.phase === 'PLAY' || hostState.phase === 'EXCHANGE') {
+                    setTimeout(() => broadcastState(), 500);
+                    setTimeout(() => broadcastState(), 1500);
+                } 
+            } 
+            else if(msg.type === 'CHAT' && msg.senderId !== me.id) appendChatMessage(msg);
+            else if(msg.type === 'SETTING_HOVER' && !isHost) { const el = document.getElementById('non-host-status-text'); if(el) { el.innerText = `現在設定中: 【${msg.ruleName}】`; el.style.color = '#FFE66D'; } }
+            else if(msg.type === 'SETTING_CONFIRM' && !isHost) {
+                const el = document.getElementById('non-host-status-text'); if(el) { el.innerText = "✅ ルール設定が更新されました！"; el.style.color = "#2ecc71"; }
+                const t = document.createElement('div'); t.style.cssText = "position:absolute; top:30%; left:50%; transform:translate(-50%, -50%); background:rgba(46, 204, 113, 0.95); color:white; padding:20px 40px; font-size:24px; font-weight:900; border-radius:30px; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation:popIn 2.5s forwards;"; t.innerText = "✅ 設定が確定されました";
+                document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
+            }
+        }
+    } catch(e) {}
+}
+
+function sendMsg(m) {
+    if(!currentRoomId) return;
+    window.AgentSDK.room.sendMessage({ message: JSON.stringify(m) }).catch(()=>{});
+    if(isHost && m.type === 'SYNC') updateClientState(m.state);
+    if(isHost && m.type === 'ANIM') UI.showActionAnim(m.text);
+    if(isHost && m.type === 'ACTION') processAction(me.id, m.action);
+    if(m.type === 'CHAT') appendChatMessage(m); 
+    if(m.type === 'ANIM_WIN') showRankWinAnim(m.name, m.rank);
+}
+
+function broadcastState() {
+    if(!isHost || !hostState) return;
+    const safe = JSON.parse(JSON.stringify(hostState));
+    safe.players.forEach(p => p.handCount = p.hand ? p.hand.length : 0);
+    safe.shortCode = hostState.shortCode || '';
+    sendMsg({ type: 'SYNC', state: safe });
+}
+
+function setupHostState() { hostState = { maxPlayers: maxRoomPlayers, phase:'LOBBY', round:1, history: [], rules:{...DEFAULT_RULES}, players:[], turnIdx:0, direction:1, board:{cards:[], type:'none', strength:0, suit:[]}, historyCards: [], isRev:false, isJBack:false, bindSuits:[], isKaidanBind:false, passCount:0, gekokujo:false, finishCount:0, interaction:null, exchange:null, isDelaying: false, lastAction: null }; }
+function addPlayerToHost(u) { if(!hostState.players.find(p=>p.id===u.id)) hostState.players.push({ ...u, isHost:u.id===me.id, hand:[], rank:2, lastRank:2, score:0, status:'waiting', disconnected: false, timeBank:0, turnTime:60, isReady:true, isCpu: false, finishOrder: -1, role: u.role || 'player' }); }
+
+function fillCPUs(state) {
+    if (state.rules.cpuEnabled) {
+        let maxP = state.maxPlayers || 5; let cpuCount = state.players.filter(p => p.isCpu).length + 1; let pCount = state.players.filter(p => p.role !== 'spectator').length;
+        while (pCount < maxP && pCount < 5) {
+            state.players.push({ id: 'cpu_' + Date.now() + '_' + cpuCount, name: 'CPU ' + cpuCount, portrait: 'https://api.dicebear.com/7.x/bottts/svg?seed=cpu' + cpuCount + Date.now(), isCpu: true, isReady: true, isHost: false, hand: [], rank: 2, lastRank: 2, score:0, status: 'waiting', disconnected: false, timeBank: 0, turnTime: 60, finishOrder: -1, role: 'player' });
+            cpuCount++; pCount++;
+        }
+    } else { state.players = state.players.filter(p => !p.isCpu); }
+}
+
+window.isSettingsReadOnly = false; let currentSettingsTab = 'base';
+window.toggleCpuHost = function(val) { if(!isHost) return; hostState.rules.cpuEnabled = val; if(!val) hostState.players = hostState.players.filter(p => !p.isCpu); broadcastState(); sendMsg({type: 'SETTING_HOVER', ruleName: 'CPU参戦'}); };
+window.setCpuDiffHost = function(val) { if(!isHost) return; hostState.rules.cpuDifficulty = val; broadcastState(); sendMsg({type: 'SETTING_HOVER', ruleName: 'CPU難易度'}); };
+window.openHostSettings = function() { window.isSettingsReadOnly = false; document.getElementById('host-settings-title').innerText = "⚙️ ルール設定"; const cb = document.getElementById('host-settings-confirm-btn'); cb.innerText = "✅ 設定を確定する"; cb.style.background = "var(--secondary)"; cb.onclick = window.confirmHostSettings; document.getElementById('host-settings-modal').classList.remove('hidden'); window.openSettingTab('base'); sendMsg({type: 'SETTING_HOVER', ruleName: '設定画面を開きました'}); };
+window.openReadOnlySettings = function() { window.isSettingsReadOnly = true; document.getElementById('host-settings-title').innerText = "📖 現在のルール設定"; const cb = document.getElementById('host-settings-confirm-btn'); cb.innerText = "✖ 閉じる"; cb.style.background = "var(--primary)"; cb.onclick = function() { document.getElementById('host-settings-modal').classList.add('hidden'); }; document.getElementById('host-settings-modal').classList.remove('hidden'); window.openSettingTab('base'); };
+window.confirmHostSettings = function() { document.getElementById('host-settings-modal').classList.add('hidden'); sendMsg({type: 'SETTING_CONFIRM'}); };
+
+window.openSettingTab = function(tabId) {
+    let readOnly = window.isSettingsReadOnly; currentSettingsTab = tabId;
+    document.querySelectorAll('.tab-btn').forEach(btn => { btn.style.background = 'rgba(0,0,0,0.4)'; btn.style.color = '#888'; btn.style.transform = 'translateY(2px)'; btn.style.boxShadow = 'none'; });
+    const activeBtn = document.getElementById('tab-btn-' + tabId); if(activeBtn) { activeBtn.style.background = 'var(--primary)'; activeBtn.style.color = '#fff'; activeBtn.style.transform = 'translateY(0)'; activeBtn.style.boxShadow = '0 -4px 10px rgba(255, 107, 107, 0.3)'; }
+    const content = document.getElementById('settings-tab-content'); content.innerHTML = '';
+    let keys = TABS[tabId]; let stateRef = isHost ? hostState : clientState; const ICON_MAP = { base: "🎭", special1: "✨", bind: "🔗", kinshi: "🚫" }; const tabIcon = ICON_MAP[tabId] || "⚙️";
+    keys.forEach(k => {
+        if(k === 'totalRounds') {
+            const currentVal = stateRef.rules[k] || 3;
+            let selectHtml = readOnly ? `<span style="color:#FFE66D; font-size:16px; font-weight:900; background:rgba(0,0,0,0.6); padding:6px 14px; border-radius:14px; border:1px solid #FFE66D; box-shadow:0 2px 4px rgba(0,0,0,0.5);">${currentVal === 999 ? '無制限' : currentVal + 'ラウンド'}</span>`
+                : `<select onchange="window.updateRuleHost('${k}', this.value)" style="background:rgba(0,0,0,0.7); color:white; border:2px solid var(--accent); padding: 6px 10px; border-radius: 8px; outline:none; font-weight:bold; font-size: 14px; cursor: pointer; max-width: 100px;">
+                    <option value="1" ${currentVal==1?'selected':''}>1</option><option value="2" ${currentVal==2?'selected':''}>2</option><option value="3" ${currentVal==3?'selected':''}>3</option><option value="4" ${currentVal==4?'selected':''}>4</option><option value="5" ${currentVal==5?'selected':''}>5</option><option value="10" ${currentVal==10?'selected':''}>10</option><option value="999" ${currentVal==999?'selected':''}>無制限</option>
+                   </select>`;
+            content.innerHTML += `<div class="setting-row"><div class="setting-info"><div class="setting-icon">${tabIcon}</div><div class="setting-name">${RULE_LABELS[k]}</div><div class="setting-desc-btn" onclick="window.showRuleDescInModal('${k}'); event.stopPropagation();">?</div></div>${selectHtml}</div>`;
+        } else {
+            const isO = stateRef.rules[k];
+            let controlHtml = readOnly ? `<span style="color:${isO?'#2ecc71':'#e74c3c'}; font-size:16px; font-weight:900; background:rgba(0,0,0,0.6); padding:6px 14px; border-radius:14px; border:1px solid ${isO?'#2ecc71':'#e74c3c'}; box-shadow:0 2px 4px rgba(0,0,0,0.5);">${isO?'ON':'OFF'}</span>`
+                : `<label class="switch" style="flex-shrink:0; pointer-events:auto;" onclick="event.stopPropagation()"><input type="checkbox" ${isO?'checked':''} onchange="window.toggleRuleHost('${k}')"><span class="slider"></span></label>`;
+            content.innerHTML += `<div class="setting-row" onclick="window.toggleRuleHostWrapper('${k}', event)"><div class="setting-info"><div class="setting-icon">${tabIcon}</div><div class="setting-name">${RULE_LABELS[k]}</div><div class="setting-desc-btn" onclick="window.showRuleDescInModal('${k}'); event.stopPropagation();">?</div></div>${controlHtml}</div>`;
+        }
+    });
+};
+
+window.updateRuleHost = function(k, val) { if(!isHost) return; hostState.rules[k] = parseInt(val, 10); broadcastState(); sendMsg({type: 'SETTING_HOVER', ruleName: RULE_LABELS[k]}); }
+window.toggleRuleHostWrapper = function(k, e) { if(window.isSettingsReadOnly) { window.showRuleDescInModal(k); } else { const checkbox = e.currentTarget.querySelector('input[type="checkbox"]'); if(checkbox && e.target !== checkbox && !e.target.classList.contains('slider')) { checkbox.checked = !checkbox.checked; window.toggleRuleHost(k); } } };
+window.toggleRuleHost = function(k) { if(!isHost) return; hostState.rules[k] = !hostState.rules[k]; broadcastState(); sendMsg({type: 'SETTING_HOVER', ruleName: RULE_LABELS[k]}); };
+window.showRuleDescInModal = function(k) { document.getElementById('rule-desc-title').innerText = RULE_LABELS[k]; document.getElementById('rule-desc-text').innerText = RULE_DESC[k] || "説明がありません。"; document.getElementById('rule-desc-popup').classList.remove('hidden'); if(isHost && !window.isSettingsReadOnly) sendMsg({type: 'SETTING_HOVER', ruleName: RULE_LABELS[k]}); };
+
+window.showActiveRules = function() {
+    const existing = document.getElementById('_active-rules-overlay');
+    if(existing) { existing.remove(); return; }
+    const stateRef = isHost ? hostState : clientState;
+    if(!stateRef || !stateRef.rules) return;
+
+    const TABS_DEF = [
+        { id:'base', label:'基本', icon:'🎭', keys:['totalRounds','cardExchange','miyakoOchi','gekokujo'] },
+        { id:'special1', label:'特殊', icon:'✨', keys:['eightGiri','sevenPass','tenDiscard','jBack','fiveSkip','nineReverse','twelveBomber','spade3','revolution'] },
+        { id:'bind', label:'縛り', icon:'🔗', keys:['suitBind','kaidanBind'] },
+        { id:'kinshi', label:'禁止あがり', icon:'🚫', keys:['kinshi2','kinshiRev3','kinshiJoker','kinshiSp3','kinshi8','kinshi11','kinshi7','kinshi10','kinshi12'] }
+    ];
+    const KINSHI_NAMES = {
+        kinshi2:'2あがり', kinshiRev3:'革命3あがり', kinshiJoker:'Jあがり',
+        kinshiSp3:'スペ3あがり', kinshi8:'8あがり', kinshi11:'Jバックあがり',
+        kinshi7:'7あがり', kinshi10:'10あがり', kinshi12:'12あがり'
+    };
+
+    const ov = document.createElement('div');
+    ov.id = '_active-rules-overlay';
+    ov.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(20,30,48,0.98);z-index:4500;display:flex;flex-direction:column;';
+
+    // ヘッダー
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0 14px;flex-shrink:0;';
+    hdr.innerHTML = '<span style="font-size:16px;font-weight:900;color:#fff;">採用ルール一覧</span><span style="font-size:20px;cursor:pointer;color:#aaa;padding:4px 8px;" id="_ar_close">✖</span>';
+    ov.appendChild(hdr);
+
+    // タブボタン
+    const tabBar = document.createElement('div');
+    tabBar.style.cssText = 'display:flex;padding:8px 10px 0 10px;gap:4px;flex-shrink:0;';
+    TABS_DEF.forEach((t,i) => {
+        const btn = document.createElement('div');
+        btn.id = '_ar_tab_' + t.id;
+        btn.style.cssText = 'flex:1;text-align:center;padding:7px 2px;font-size:11px;font-weight:900;border-radius:8px 8px 0 0;cursor:pointer;transition:all 0.15s;' + (i===0 ? 'background:rgba(255,255,255,0.15);color:#fff;' : 'background:rgba(255,255,255,0.05);color:#888;');
+        btn.innerHTML = t.icon + '<br>' + t.label;
+        btn.addEventListener('pointerup', () => _arShowTab(t.id, TABS_DEF, stateRef, KINSHI_NAMES));
+        tabBar.appendChild(btn);
+    });
+    ov.appendChild(tabBar);
+
+    // 区切り線
+    const line = document.createElement('div');
+    line.style.cssText = 'height:2px;background:rgba(255,255,255,0.15);margin:0 10px;flex-shrink:0;';
+    ov.appendChild(line);
+
+    // コンテンツエリア
+    const content = document.createElement('div');
+    content.id = '_ar_content';
+    content.style.cssText = 'flex:1;overflow-y:auto;padding:10px;';
+    ov.appendChild(content);
+
+    document.getElementById('game-container').appendChild(ov);
+    document.getElementById('_ar_close').addEventListener('pointerup', () => ov.remove());
+
+    _arShowTab('base', TABS_DEF, stateRef, KINSHI_NAMES);
+};
+
+function _arShowTab(tabId, TABS_DEF, stateRef, KINSHI_NAMES) {
+    // タブボタンの見た目更新
+    TABS_DEF.forEach(t => {
+        const btn = document.getElementById('_ar_tab_' + t.id);
+        if(!btn) return;
+        if(t.id === tabId) { btn.style.background='rgba(255,255,255,0.15)'; btn.style.color='#fff'; }
+        else { btn.style.background='rgba(255,255,255,0.05)'; btn.style.color='#888'; }
+    });
+
+    const tab = TABS_DEF.find(t => t.id === tabId);
+    const content = document.getElementById('_ar_content');
+    if(!content || !tab) return;
+    content.innerHTML = '';
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+
+    tab.keys.forEach(key => {
+        const isOn = key === 'totalRounds' ? true : !!stateRef.rules[key];
+        const card = document.createElement('div');
+        card.style.cssText = 'border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;min-height:70px;text-align:center;transition:opacity 0.15s;'
+            + (isOn ? 'background:rgba(46,204,113,0.25);border:1.5px solid #2ecc71;' : 'background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);');
+
+        let nameHtml = '';
+        if(tabId === 'kinshi') {
+            const n = KINSHI_NAMES[key] || RULE_LABELS[key];
+            const base = n.replace('あがり','');
+            nameHtml = `<span style="font-size:13px;font-weight:900;color:${isOn?'#fff':'#666'};white-space:nowrap;">${base}</span><span style="font-size:13px;font-weight:900;color:${isOn?'#fff':'#666'};">あがり</span>`;
+        } else if(key === 'totalRounds') {
+            nameHtml = `<span style="font-size:13px;font-weight:900;color:#fff;white-space:nowrap;">${RULE_LABELS[key]}</span><span style="font-size:14px;font-weight:900;color:var(--accent);">${stateRef.rules[key]===999?'無制限':stateRef.rules[key]+'R'}</span>`;
+        } else {
+            nameHtml = `<span style="font-size:13px;font-weight:900;color:${isOn?'#fff':'#666'};white-space:nowrap;">${RULE_LABELS[key]}</span>`;
+        }
+
+        const badge = key === 'totalRounds' ? '' : `<span style="font-size:11px;font-weight:900;padding:2px 8px;border-radius:6px;${isOn?'background:rgba(46,204,113,0.3);color:#2ecc71;':'background:rgba(255,255,255,0.08);color:#555;'}">${isOn?'✅ ON':'❌ OFF'}</span>`;
+
+        card.innerHTML = nameHtml + badge;
+        card.addEventListener('pointerup', () => window.showRuleDetail(key));
+        grid.appendChild(card);
+    });
+
+    content.appendChild(grid);
+}
+
+
+window.showRuleDetail = function(key) { document.getElementById('detail-rule-title').innerText = RULE_LABELS[key]; document.getElementById('detail-rule-desc').innerText = RULE_DESC[key] || "説明がありません。"; document.getElementById('active-rule-detail-overlay').classList.remove('hidden'); document.getElementById('active-rule-detail-popup').classList.remove('hidden'); };
+window.closeRuleDetail = function() { document.getElementById('active-rule-detail-overlay').classList.add('hidden'); document.getElementById('active-rule-detail-popup').classList.add('hidden'); };
+
+function hasExchangePairs(players) { const playingPlayers = players.filter(p=>p.role!=='spectator' && p.status!=='abandoned'); return playingPlayers.some(p => p.lastRank === 0) && playingPlayers.some(p => p.lastRank === 4); }
+function initExchange() {
+    hostState.exchange = { pending: {}, offers: {} }; const pl = hostState.players.filter(p=>p.role!=='spectator' && p.status!=='abandoned');
+    const d = pl.find(p=>p.lastRank===4), df = pl.find(p=>p.lastRank===0), h = pl.find(p=>p.lastRank===3), f = pl.find(p=>p.lastRank===1); let hasEx = false;
+    if(d && df) { hasEx=true; hostState.exchange.offers[d.id] = d.hand.sort((a,b)=>getBaseStr(b)-getBaseStr(a)).splice(0,2); hostState.exchange.pending[df.id] = {count:2, target:d.id}; }
+    if(h && f) { hasEx=true; hostState.exchange.offers[h.id] = h.hand.sort((a,b)=>getBaseStr(b)-getBaseStr(a)).splice(0,1); hostState.exchange.pending[f.id] = {count:1, target:h.id}; }
+    if(!hasEx) { hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); return; }
+    Object.keys(hostState.exchange.pending).forEach(uid => { const p = pl.find(x=>x.id===uid); if(p && p.isCpu) { const req = hostState.exchange.pending[uid].count; hostState.exchange.offers[uid] = p.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)).splice(0, req); delete hostState.exchange.pending[uid]; } });
+    checkExchangeComplete();
+}
+function checkExchangeComplete() {
+    if(!hostState.exchange || Object.keys(hostState.exchange.pending).length > 0) { broadcastState(); return; }
+    const pl = hostState.players.filter(p=>p.role!=='spectator' && p.status!=='abandoned'); const d = pl.find(p=>p.lastRank===4), df = pl.find(p=>p.lastRank===0), h = pl.find(p=>p.lastRank===3), f = pl.find(p=>p.lastRank===1);
+    if(d && df && hostState.exchange.offers[df.id] && hostState.exchange.offers[d.id]) { df.hand.push(...hostState.exchange.offers[d.id]); d.hand.push(...hostState.exchange.offers[df.id]); }
+    if(h && f && hostState.exchange.offers[f.id] && hostState.exchange.offers[h.id]) { f.hand.push(...hostState.exchange.offers[h.id]); h.hand.push(...hostState.exchange.offers[f.id]); }
+    pl.forEach(p => p.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)));
+    hostState.exchange = null; sendMsg({type:'ANIM', text:"🔄 カード交換完了！"});
+    setTimeout(() => { if(!hostState || hostState.phase !== 'EXCHANGE') return; hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); }, 2000);
+}
+
+function startHostGame() {
+    if(!isHost || !hostState || hostState.players.length === 0) return;
+    if(lobbySyncInterval) clearInterval(lobbySyncInterval);
+    hostState.players = hostState.players.filter(p => !p.disconnected || p.status === 'abandoned');
+    fillCPUs(hostState);
+    if(hostState.players.filter(p=>p.role!=='spectator').length < 2) { showToast("最低2人のプレイヤーが必要です。", true); return; }
+    hostState.players.forEach(p => { p.isReady = true; });
+    hostState.players.forEach(p => { 
+        if(p.status === 'abandoned') return;
+        if(p.role === 'spectator') { p.status = 'spectator'; p.hand = []; }
+        else { p.lastRank = hostState.round>1 ? p.rank : 2; p.status = 'playing'; p.hand = []; p.timeBank = 0; p.turnTime = 60; p.finishOrder = -1; p.penReason = ""; }
+    });
+    hostState.finishCount = 0; hostState.gekokujo = false; hostState.interaction = null; hostState.exchange = null; hostState.isDelaying = false; hostState.lastAction = null; clearBoard(true); dealCards();
+    if(hostState.round > 1 && hostState.rules.cardExchange && !hostState.gekokujoTriggeredLastTime && hasExchangePairs(hostState.players)) { hostState.phase = 'EXCHANGE'; initExchange(); } 
+    else { hostState.gekokujoTriggeredLastTime = false; hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); }
+    startHostTimer();
+}
+
+function startHostTimer() {
+    if(turnTimerInterval) clearInterval(turnTimerInterval);
+    turnTimerInterval = setInterval(() => {
+        if(!isHost || !hostState || hostState.phase !== 'PLAY' || hostState.isDelaying || hostState.interaction || hostState.exchange) return;
+        let cp = hostState.players[hostState.turnIdx];
+        if(!cp || cp.status !== 'playing') return;
+        if(cp.isCpu) return;
+        if(cp.disconnected) { processAction(cp.id, {type: 'PASS'}); return; }
+        if(cp.turnTime > 0) cp.turnTime--; else processAction(cp.id, {type: 'PASS'});
+        broadcastState();
+    }, 1000);
+}
+
+function startClientTimer() {
+    if(clientTimerInterval) clearInterval(clientTimerInterval);
+    clientTimerInterval = setInterval(() => {
+        if(clientState.phase !== 'PLAY' || clientState.isDelaying || clientState.interaction || clientState.exchange) return;
+        let cp = clientState.players[clientState.turnIdx];
+        if(!cp || cp.status !== 'playing' || cp.isCpu) return;
+        if(currentClientTurnTime > 0) currentClientTurnTime--;
+        requestAnimationFrame(renderGame);
+    }, 1000);
+}
+
+function dealCards() {
+    let d = []; SUITS.forEach(s => RANKS.forEach(r => d.push({s,r,id:`${s}${r}`}))); d.push({s:'JOKER',r:0,id:'J1'},{s:'JOKER',r:0,id:'J2'});
+    for(let i=d.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [d[i], d[j]] = [d[j], d[i]]; }
+    let activePlayers = hostState.players.filter(p=>p.role !== 'spectator' && p.status !== 'abandoned');
+    let i=0; while(d.length>0) { activePlayers[i].hand.push(d.pop()); i=(i+1)%activePlayers.length; }
+    activePlayers.forEach(p => p.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)));
+}
+function getBaseStr(c) { return c.s==='JOKER' ? 99 : (c.r===1?14:c.r===2?15:c.r); }
+function getStr(c, rev) { let s = getBaseStr(c); return s===99 ? 99 : (rev ? 16-s : s); }
+
+function determineFirstPlayer() {
+    let s=0; const d = hostState.players.findIndex(p=>p.lastRank===4 && p.role !== 'spectator' && p.status !== 'abandoned');
+    if(d>=0) s=d; else for(let i=0; i<hostState.players.length; i++) if(hostState.players[i].role !== 'spectator' && hostState.players[i].status !== 'abandoned' && hostState.players[i].hand.some(c=>c.id==='D3')) {s=i; break;}
+    hostState.turnIdx = s; hostState.direction = 1; hostState.players[s].turnTime = 60;
+    if(hostState.players[s].isCpu) playCPU(s);
+}
+
+function getCombinations(arr, k) {
+    if (k <= 0) return []; if (k === 1) return arr.map(a => [a]); if (k > arr.length) return []; 
+    let combs = []; for (let i = 0; i <= arr.length - k; i++) { let head = arr.slice(i, i + 1); let tailCombs = getCombinations(arr.slice(i + 1), k - 1); for (let tail of tailCombs) combs.push(head.concat(tail)); }
+    return combs;
+}
+
+function getPlayableCardIds(hand, state) {
+    let validIds = new Set(); if(!hand) return validIds;
+    if (state.board.cards.length === 0) return new Set(hand.map(c => c.id));
+    let reqCount = state.board.cards.length; if (hand.length < reqCount) return validIds;
+    let bType = state.board.type; let jokers = hand.filter(c => c.s === 'JOKER'); let normals = hand.filter(c => c.s !== 'JOKER');
+
+    if (bType === 'single') { hand.forEach(c => { if(validatePlay([c], state)) validIds.add(c.id); }); } 
+    else if (bType === 'pair') {
+        let rankMap = {}; normals.forEach(c => { if(!rankMap[c.r]) rankMap[c.r] = []; rankMap[c.r].push(c); });
+        Object.values(rankMap).forEach(cards => { let pool = [...cards, ...jokers]; if(pool.length >= reqCount) { let combs = getCombinations(pool, reqCount); for(let comb of combs) { if(validatePlay(comb, state)) { comb.forEach(c => validIds.add(c.id)); } } } });
+        if (jokers.length >= reqCount) { let combs = getCombinations(jokers, reqCount); for(let comb of combs) { if(validatePlay(comb, state)) comb.forEach(c => validIds.add(c.id)); } }
+    } else if (bType === 'seq') {
+        let suitMap = {}; normals.forEach(c => { if(!suitMap[c.s]) suitMap[c.s] = []; suitMap[c.s].push(c); });
+        Object.values(suitMap).forEach(cards => { let pool = [...cards, ...jokers]; if(pool.length >= reqCount) { let combs = getCombinations(pool, reqCount); for(let comb of combs) { if(validatePlay(comb, state)) { comb.forEach(c => validIds.add(c.id)); } } } });
+    }
+    return validIds;
+}
+
+function canPlayAnyCard(hand, state) { if(!hand) return false; return getPlayableCardIds(hand, state).size > 0; }
+
+function isPotentialPlay(testCards, state, fullHand) {
+    if (state.board.cards.length > 0) {
+        let reqCount = state.board.cards.length; if (testCards.length > reqCount) return false; if (testCards.length === reqCount) return validatePlay(testCards, state);
+        let bType = state.board.type; let jokers = fullHand.filter(c => c.s === 'JOKER'); let pool = [];
+        if (bType === 'pair') { const nonJoker = testCards.find(c => c.s !== 'JOKER'); if (nonJoker) pool = fullHand.filter(c => c.r === nonJoker.r || c.s === 'JOKER'); else pool = jokers; } 
+        else if (bType === 'seq') { const nonJoker = testCards.find(c => c.s !== 'JOKER'); if (nonJoker) pool = fullHand.filter(c => c.s === nonJoker.s || c.s === 'JOKER'); else pool = jokers; } 
+        else { pool = fullHand; }
+        if (pool.length < reqCount) return false;
+        let combs = getCombinations(pool, reqCount); for(let comb of combs) { let containsAll = testCards.every(tc => comb.some(c => c.id === tc.id)); if(containsAll && validatePlay(comb, state)) return true; }
+        return false;
+    } else {
+        const nonJoker = testCards.find(c => c.s !== 'JOKER'); if (!nonJoker) return true; 
+        let isPairSubset = testCards.every(c => c.r === nonJoker.r || c.s === 'JOKER'); let isSeqSubset = false; let su = testCards.filter(c => c.s !== 'JOKER');
+        if (new Set(su.map(c => c.s)).size <= 1) {
+            let so = [...testCards].sort((a,b) => getBaseStr(a) - getBaseStr(b)); let l = getBaseStr(so[0]), j = testCards.length - su.length, valid = true;
+            for(let i=1; i<so.length; i++) { if(so[i].s === 'JOKER') continue; let d = getBaseStr(so[i]) - l; if(d <= 0) valid = false; else if (d > 1) { j -= (d-1); if(j < 0) valid = false; } l = getBaseStr(so[i]); }
+            if(valid) isSeqSubset = true;
+        }
+        return isPairSubset || isSeqSubset;
+    }
+}
+
+function playCPU(idx) {
+    if(hostState.phase !== 'PLAY' || hostState.turnIdx !== idx || hostState.interaction || hostState.isDelaying) return;
+    const p = hostState.players[idx]; if(p.status !== 'playing' || p.role === 'spectator') return;
+    const playId = Date.now(); p._cpuPlayId = playId; 
+    setTimeout(() => {
+        if(hostState.phase !== 'PLAY' || hostState.turnIdx !== idx || hostState.interaction || hostState.isDelaying || p.status !== 'playing' || p._cpuPlayId !== playId) return;
+        try {
+            let validPlays = []; const rev = hostState.isRev ^ hostState.isJBack; const reqCount = hostState.board.cards.length === 0 ? 1 : hostState.board.cards.length; const isFree = hostState.board.cards.length === 0;
+            let hand = [...p.hand].sort((a,b) => rev ? getStr(a, true) - getStr(b, true) : getStr(a, false) - getStr(b, false));
+            let jokers = hand.filter(c => c.s === 'JOKER'); let normals = hand.filter(c => c.s !== 'JOKER');
+            let rankMap = {}; normals.forEach(c => { if(!rankMap[c.r]) rankMap[c.r] = []; rankMap[c.r].push(c); });
+            let suitMap = {}; normals.forEach(c => { if(!suitMap[c.s]) suitMap[c.s] = []; suitMap[c.s].push(c); });
+            let lengths = isFree ? [1,2,3,4] : [reqCount];
+            lengths.forEach(len => {
+                if (len >= 1) { Object.values(rankMap).forEach(cards => { let pool = [...cards, ...jokers]; if (pool.length >= len) { let combs = getCombinations(pool, len); for (let comb of combs) { if (validatePlay(comb, hostState)) validPlays.push(comb); } } }); if (jokers.length >= len) { let combs = getCombinations(jokers, len); for(let comb of combs) { if(validatePlay(comb, hostState)) validPlays.push(comb); } } }
+                if (len >= 3) { Object.values(suitMap).forEach(cards => { let pool = [...cards, ...jokers]; if (pool.length >= len) { let combs = getCombinations(pool, len); for (let comb of combs) { if (validatePlay(comb, hostState)) validPlays.push(comb); } } }); }
+            });
+            let uniquePlays = []; let seen = new Set();
+            validPlays.forEach(play => { let idStr = play.map(c=>c.id).sort().join(','); if(!seen.has(idStr)) { seen.add(idStr); uniquePlays.push(play); } });
+            let toPlay = [];
+            if (uniquePlays.length > 0) {
+                let diff = hostState.rules.cpuDifficulty || 'intermediate';
+                if (diff === 'beginner') { if (!isFree && Math.random() < 0.3) { toPlay = []; } else { let play = uniquePlays[Math.floor(Math.random() * uniquePlays.length)]; toPlay = play.map(x=>x.id); } } 
+                else if (diff === 'advanced') { let bestPlay = uniquePlays[0], bestScore = -9999; uniquePlays.forEach(play => { let score = 0; if (hand.length - play.length === 0) score += 10000; let has8 = play.some(c=>c.r===8), hasJoker = play.some(c=>c.s==='JOKER'), bs = getStr(play[0], rev); if (isFree) { score -= bs; score += play.length * 10; if (has8) score -= 50; if (hasJoker) score -= 100; } else { score -= bs; if (has8) score += 20; if (hasJoker) score -= 40; } if (score > bestScore) { bestScore = score; bestPlay = play; } }); toPlay = bestPlay.map(x=>x.id); } 
+                else { uniquePlays.sort((a,b) => { let diffStr = getStr(a[0], rev) - getStr(b[0], rev); if(diffStr !== 0) return diffStr; return b.length - a.length; }); toPlay = uniquePlays[0].map(x=>x.id); }
+            }
+            if(toPlay.length > 0) { let pC = hand.filter(c => toPlay.includes(c.id)); processAction(p.id, {type: 'PLAY', cardIds: toPlay, bindSuits: pC.map(c=>c.s).filter(s=>s!=='JOKER')}); } 
+            else { processAction(p.id, {type: 'PASS'}); }
+        } catch(e) { processAction(p.id, {type: 'PASS'}); }
+    }, 1200 + Math.random() * 500); 
+}
+
+function containsRank(cards, rankNum) {
+    if (cards.some(c => c.r === rankNum)) return true;
+    const su = cards.filter(c => c.s !== 'JOKER'); if (su.length === 0) return false;
+    if (cards.every(c => c.r === su[0].r || c.s === 'JOKER')) return su[0].r === rankNum;
+    if (cards.length >= 3 && new Set(su.map(c=>c.s)).size === 1) { let baseRanks = su.map(c => getBaseStr(c)); let targetBase = rankNum === 1 ? 14 : (rankNum === 2 ? 15 : rankNum); if (targetBase >= Math.min(...baseRanks) - (cards.length - su.length) && targetBase <= Math.max(...baseRanks) + (cards.length - su.length)) return true; }
+    return false;
+}
+
+function processAction(uid, act) {
+    if(hostState.isDelaying) return; 
+
+    if(hostState.phase === 'EXCHANGE' && act.type === 'EXCHANGE_OFFER') {
+        if(!hostState.exchange || !hostState.exchange.pending[uid]) return;
+        const p = hostState.players.find(x=>x.id===uid); const req = hostState.exchange.pending[uid];
+        if(act.cardIds.length !== req.count) return;
+        const give = p.hand.filter(c=>act.cardIds.includes(c.id)); if(give.length !== req.count) return;
+        p.hand = p.hand.filter(c=>!act.cardIds.includes(c.id));
+        hostState.exchange.offers[uid] = give; delete hostState.exchange.pending[uid];
+        checkExchangeComplete(); return;
+    }
+
+    if(hostState.phase !== 'PLAY') return;
+
+    if(act.type === 'RESOLVE_BOMBER') {
+        if(!hostState.interaction || hostState.interaction.playerId !== uid || hostState.interaction.queue[0].type !== 'BOMBER') return;
+        let tRank = act.bomberRank; hostState.interaction.queue.shift(); let affected = 0;
+        hostState.players.forEach(pl => {
+            if(pl.role !== 'spectator' && pl.status !== 'abandoned') {
+                let before = pl.hand.length; pl.hand = pl.hand.filter(c => c.r !== tRank); affected += (before - pl.hand.length);
+                if(pl.hand.length === 0 && pl.status === 'playing') handleWin(hostState.players.indexOf(pl), []);
+            }
+        });
+        hostState.board.cards = hostState.board.cards.filter(c => c.r !== tRank);
+        sendMsg({type:'ANIM', text: `💣 ${tRank===1?'A':tRank===11?'J':tRank===12?'Q':tRank===13?'K':tRank}爆破!(-${affected}枚)`});
+        triggerNextInteraction(); return;
+    }
+
+    if(act.type === 'RESOLVE_INTERACT') {
+        if(!hostState.interaction || hostState.interaction.playerId !== uid) return;
+        const pIdx = hostState.players.findIndex(p=>p.id===uid); if(pIdx===-1) return;
+        const p = hostState.players[pIdx]; if(hostState.interaction.queue.length === 0) return;
+        let next = hostState.interaction.queue[0]; if(act.cardIds.length !== next.count) return;
+        hostState.interaction.queue.shift();
+        let cardsToMove = p.hand.filter(c => act.cardIds.includes(c.id)); p.hand = p.hand.filter(c => !act.cardIds.includes(c.id));
+        if(next.type === 'SEVEN') { let targetIdx = getNextPlayer(pIdx, 1); if(targetIdx !== -1) { hostState.players[targetIdx].hand.push(...cardsToMove); hostState.players[targetIdx].hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)); sendMsg({type:'ANIM', text: `🎁${cardsToMove.length}枚渡し!`}); } } 
+        else if(next.type === 'TEN') { sendMsg({type:'ANIM', text: `🗑${cardsToMove.length}枚捨て!`}); }
+        if(p.hand.length === 0) { handleWin(pIdx, []); if(hostState.interaction) hostState.interaction.queue = []; }
+        triggerNextInteraction(); return;
+    }
+
+    const pIdx = hostState.players.findIndex(p=>p.id===uid);
+    if(pIdx===-1 || pIdx!==hostState.turnIdx || hostState.players[pIdx].status!=='playing' || hostState.players[pIdx].role==='spectator') return;
+    const p = hostState.players[pIdx];
+    
+    if(act.type === 'PASS') { p.status='passed'; hostState.passCount++; sendMsg({ type: 'ANIM', text: `💨 パス` }); checkTurnAdvance(); broadcastState(); return; }
+    
+    const played = p.hand.filter(c => act.cardIds.includes(c.id)); if(played.length !== act.cardIds.length) return;
+    p.hand = p.hand.filter(c => !act.cardIds.includes(c.id)); p.status = 'playing'; p.turnTime = 60;
+    const oldSuit = hostState.board.suit; let oldStr = hostState.board.strength; let currentRev = hostState.isRev ^ hostState.isJBack; 
+    if (hostState.board.cards && hostState.board.cards.length > 0) hostState.historyCards.push(hostState.board.cards);
+    hostState.board.cards = played; 
+    const sgl = played.length === 1; const nonJoker = played.find(c=>c.s!=='JOKER'); const targetR = nonJoker ? nonJoker.r : 0; const pr = played.length>1 && played.every(c=>c.r===targetR||c.s==='JOKER');
+    let so=[...played].sort((a,b)=>getBaseStr(a)-getBaseStr(b)); const st = played.length>=3 && (()=>{ const su=played.filter(c=>c.s!=='JOKER'); if(new Set(su.map(c=>c.s)).size>1) return false; let l=getBaseStr(so[0]), j=played.length-su.length; for(let i=1;i<so.length;i++){ if(so[i].s==='JOKER') continue; let d=getBaseStr(so[i])-l; if(d!==1) { j-=(d-1); if(j<0) return false; } l=getBaseStr(so[i]); } return true; })();
+    hostState.board.type = sgl ? 'single' : (pr ? 'pair' : (st ? 'seq' : 'none'));
+    let currentPlayStr = getStr(so[0], currentRev); 
+    hostState.lastAction = { playerId: uid, actType: 'PLAY', time: Date.now() };
+
+    let isClear = false; let anims = []; let isSeq = false;
+    if(hostState.rules.spade3 && played.length===1 && played[0].id==='S3'&& oldStr === 99) { anims.push("⚔️スペ3返し!"); isClear = true; }
+    if (oldSuit && oldSuit.length > 0 && hostState.board.cards.length === act.cardIds.length) { if (currentPlayStr === oldStr + 1) isSeq = true; }
+    let suitMatch = false;
+    if (oldSuit && oldSuit.length > 0 && hostState.board.cards.length === act.cardIds.length) {
+        let actSuits = act.bindSuits || []; let missing = oldSuit.filter(s => !actSuits.includes(s)); let jokersUsed = act.cardIds.length - actSuits.length;
+        if (missing.length <= jokersUsed && actSuits.every(s => oldSuit.includes(s))) { suitMatch = true; act.bindSuits = [...oldSuit]; }
+    }
+
+    if (hostState.rules.kaidanBind && isSeq) { hostState.isKaidanBind = true; anims.push("📈階段縛り!"); } 
+    if (hostState.rules.suitBind && suitMatch) { hostState.bindSuits = act.bindSuits; anims.push("🔗縛り!"); }
+    if(hostState.rules.eightGiri && containsRank(played, 8)) { isClear=true; anims.push("✂️8切り!"); }
+    if(hostState.rules.revolution && played.length>=4) { hostState.isRev=!hostState.isRev; anims.push(hostState.isRev ? "🔥革命!" : "💫革命返し!"); }
+    if(hostState.rules.jBack && containsRank(played, 11)) { hostState.isJBack=!hostState.isJBack; anims.push("✨Jバック!"); }
+    if(hostState.rules.nineReverse && containsRank(played, 9)) { hostState.direction*=-1; anims.push("🔄リバース!"); }
+
+    let newRev = hostState.isRev ^ hostState.isJBack; let newStr = getStr(so[0], newRev);
+    hostState.board.strength = newStr; hostState.board.suit = played.map(c=>c.s).filter(s=>s!=='JOKER');
+
+    let skips=0; if(hostState.rules.fiveSkip) { skips=played.filter(c=>c.r===5).length; if(skips===0 && containsRank(played, 5)) skips=1; if(skips>0) anims.push("⏭スキップ!"); }
+    let interacts = [];
+    if(hostState.rules.twelveBomber) { let c = played.filter(x=>x.r===12).length; if(c===0 && containsRank(played, 12)) c=1; if(c>0) interacts.push({type:'BOMBER', count:c}); }
+    if(hostState.rules.tenDiscard) { let c = played.filter(x=>x.r===10).length; if(c===0 && containsRank(played, 10)) c=1; if(c>0) interacts.push({type:'TEN', count:c}); }
+    if(hostState.rules.sevenPass) { let c = played.filter(x=>x.r===7).length; if(c===0 && containsRank(played, 7)) c=1; if(c>0) interacts.push({type:'SEVEN', count:c}); }
+
+    if(anims.length > 0) sendMsg({ type: 'ANIM', text: anims.join(" ") });
+    hostState.passCount = 0; 
+    if(p.hand.length===0) handleWin(pIdx, played);
+    if(hostState.phase !== 'PLAY') return;
+    if(interacts.length > 0 && p.hand.length > 0) { hostState.interaction = { playerId: p.id, queue: interacts, skips: skips, isClear: isClear }; triggerNextInteraction(); return; }
+    
+    if(isClear) {
+        hostState.isDelaying = true; broadcastState();
+        setTimeout(() => { if(!hostState || hostState.phase !== 'PLAY') return; hostState.isDelaying = false; clearBoard(false); if(p.hand.length === 0 || p.status !== 'playing') advanceTurn(1); else if(p.disconnected) processAction(p.id, {type: 'PASS'}); else if(p.isCpu) playCPU(pIdx); broadcastState(); }, 1500); 
+    } else { advanceTurn(skips+1); broadcastState(); }
+}
+
+function triggerNextInteraction() {
+    if(hostState.phase !== 'PLAY' || !hostState.interaction) return;
+    const intData = hostState.interaction; const p = hostState.players.find(x=>x.id===intData.playerId);
+    if(intData.queue.length === 0 || p.hand.length === 0) {
+        let skips = intData.skips, isClear = intData.isClear; hostState.interaction = null;
+        if(hostState.phase !== 'PLAY') return;
+        if(isClear) { hostState.isDelaying = true; broadcastState(); setTimeout(() => { if(!hostState || hostState.phase !== 'PLAY') return; hostState.isDelaying = false; clearBoard(false); if(p.hand.length === 0 || p.status !== 'playing') advanceTurn(1); else if(p.disconnected) processAction(p.id, {type: 'PASS'}); else if(p.isCpu) playCPU(hostState.players.findIndex(x=>x.id===p.id)); broadcastState(); }, 1500); } 
+        else { advanceTurn(skips + 1); broadcastState(); }
+        return;
+    }
+    let next = intData.queue[0]; if(next.type !== 'BOMBER') next.count = Math.min(next.count, p.hand.length);
+    if(p.isCpu) { setTimeout(() => { if(hostState.phase !== 'PLAY' || !hostState.interaction) return; if(next.type === 'BOMBER') { processAction(p.id, {type: 'RESOLVE_BOMBER', bomberRank: Math.floor(Math.random()*13)+1 }); } else { const rev = hostState.isRev ^ hostState.isJBack; let h = [...p.hand].sort((a,b)=> rev ? getStr(b, true)-getStr(a, true) : getStr(a, false)-getStr(b, false)); processAction(p.id, {type: 'RESOLVE_INTERACT', cardIds: h.slice(0, next.count).map(c=>c.id)}); } }, 1200); }
+    broadcastState();
+}
+
+function showRankWinAnim(playerName, rank) {
+    const text = `${playerName} が\n${RANK_NAMES[rank]} で上がり!`; const el = document.createElement('div');
+    el.style.cssText = "position:absolute; top:35%; left:50%; transform:translate(-50%,-50%) scale(0); font-size:32px; font-weight:900; color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.8), 2px 2px 4px #000; z-index:7500; pointer-events:none; text-align:center; line-height:1.4; white-space:nowrap; background:rgba(0,0,0,0.92); padding:20px 40px; border-radius:24px; border:5px solid #fff; box-shadow:0 0 60px rgba(255,255,255,0.3), 0 15px 40px rgba(0,0,0,0.9);";
+    if(rank===0) el.style.borderColor = '#FFD700'; if(rank===1) el.style.borderColor = '#bdc3c7'; if(rank===3) el.style.borderColor = '#e67e22'; if(rank===4) { el.style.borderColor = '#c0392b'; el.style.color = '#ff7675'; }
+    el.innerHTML = text.replace('\n', '<br>'); document.getElementById('game-container').appendChild(el);
+    el.animate([{ transform: 'translate(-50%, -50%) scale(0) rotate(-5deg)', opacity: 0 }, { transform: 'translate(-50%, -50%) scale(1.1) rotate(2deg)', opacity: 1, offset: 0.6 }, { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 }], { duration: 600, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)', fill: 'forwards' });
+    setTimeout(() => { el.animate([ { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(1.3)', opacity: 0 } ], { duration: 400, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove(); }, 3500);
+}
+
+function handleWin(i, last) {
+    const p = hostState.players[i]; let pen=false; let penReason = "";
+    if(last && last.length>0) {
+        if(hostState.rules.kinshi2 && containsRank(last, 2)) { pen = true; penReason = "2あがり"; } else if(hostState.rules.kinshiRev3 && hostState.isRev && containsRank(last, 3)) { pen = true; penReason = "革命時3あがり"; } else if(hostState.rules.kinshiJoker && last.some(c=>c.s==='JOKER')) { pen = true; penReason = "JOKERあがり"; } else if(hostState.rules.kinshiSp3 && last.length===1 && last[0].id==='S3' && hostState.board.cards.length>0 && hostState.board.cards[0].s==='JOKER') { pen = true; penReason = "スペ3あがり"; } else if(hostState.rules.kinshi8 && containsRank(last, 8)) { pen = true; penReason = "8切りあがり"; } else if(hostState.rules.kinshi11 && containsRank(last, 11)) { pen = true; penReason = "11バックあがり"; } else if(hostState.rules.kinshi7 && containsRank(last, 7)) { pen = true; penReason = "7渡しあがり"; } else if(hostState.rules.kinshi10 && containsRank(last, 10)) { pen = true; penReason = "10捨てあがり"; } else if(hostState.rules.kinshi12 && containsRank(last, 12)) { pen = true; penReason = "12ボンバーあがり"; }
+    }
+    const playingCount = hostState.players.filter(x=>x.role!=='spectator' && x.status!=='abandoned').length;
+    let tempRankMap = playingCount>=5 ? [0,1,2,3,4] : playingCount===4 ? [0,1,3,4] : playingCount===3 ? [0,2,4] : [0,4];
+    if(pen) { p.status='penalized'; p.finishOrder = hostState.finishCount++; p.penReason = penReason; sendMsg({type:'ANIM', text: `❌反則(${penReason})`}); }
+    else {
+        p.status='finished'; p.finishOrder = hostState.finishCount++; let tempRank = tempRankMap[p.finishOrder] !== undefined ? tempRankMap[p.finishOrder] : 2;
+        sendMsg({type:'ANIM_WIN', playerId: p.id, rank: tempRank, name: p.name});
+        if(hostState.rules.miyakoOchi && p.lastRank===0 && p.finishOrder!==0) { p.status='miyako'; }
+        else if(hostState.rules.miyakoOchi) { const fd=hostState.players.find(x=>x.lastRank===0 && x.role!=='spectator' && x.status!=='abandoned'); if(fd && fd.status==='playing') { fd.status='miyako'; fd.finishOrder = hostState.finishCount++; fd.hand=[]; sendMsg({type:'ANIM',text:"🏯都落ち..."}); } }
+        if(hostState.rules.gekokujo && p.lastRank===4 && p.finishOrder===0) hostState.gekokujo=true;
+    }
+    checkGameEnd();
+}
+
+function clearBoard(full) { hostState.board = {cards:[], type:'none', strength:0, suit:[]}; hostState.historyCards = []; hostState.isJBack = false; hostState.bindSuits = []; hostState.isKaidanBind = false; hostState.passCount = 0; hostState.isDelaying = false; hostState.players.forEach(p => { if(p.status === 'passed') p.status = 'playing'; }); if(full) { hostState.isRev = false; hostState.direction = 1; } }
+
+function getNextPlayer(cur, steps) { let c=0, idx=cur, l=0; while(c<steps) { idx=(idx+hostState.direction+hostState.players.length)%hostState.players.length; if(['playing','passed'].includes(hostState.players[idx].status) && hostState.players[idx].role!=='spectator') c++; l++; if(l>20) return -1; } return idx; }
+function advanceTurn(st) { let n=getNextPlayer(hostState.turnIdx, st); if(n!==-1) { hostState.turnIdx=n; const curP = hostState.players[n]; curP.turnTime = 60; if(curP.status==='passed') checkTurnAdvance(); else if(curP.isCpu) playCPU(n); } }
+
+function checkTurnAdvance() { 
+    if(hostState.isDelaying) return; 
+    const playingPlayers = hostState.players.filter(p=>['playing','passed'].includes(p.status) && p.role!=='spectator');
+    const activeCount = playingPlayers.length; const j = playingPlayers.filter(p=>p.status==='playing'); 
+    if((j.length <= 1 || hostState.passCount >= activeCount - 1) && hostState.board.cards.length > 0) { 
+        hostState.isDelaying = true; sendMsg({ type: 'ANIM', text: "🧹 全員パス" }); broadcastState();
+        setTimeout(() => { if(!hostState || hostState.phase !== 'PLAY') return; hostState.isDelaying = false; clearBoard(false); if(j.length === 1) { hostState.turnIdx = hostState.players.indexOf(j[0]); } else { let n = getNextPlayer(hostState.turnIdx, 1); if(n !== -1) hostState.turnIdx = n; } const curP = hostState.players[hostState.turnIdx]; if(curP) { curP.turnTime = 60; if(curP.isCpu) playCPU(hostState.turnIdx); } broadcastState(); }, 1500); 
+    } else { advanceTurn(1); }
+}
+
+function checkGameEnd() {
+    if(hostState.players.filter(p=>['playing','passed'].includes(p.status) && p.role!=='spectator').length <= 1) {
+        hostState.players.filter(p=>['playing','passed'].includes(p.status) && p.role!=='spectator').forEach(p=>{ if(p.status==='playing'){ p.finishOrder = hostState.finishCount++; p.status='finished'; } });
+        const playingPlayers = hostState.players.filter(p=>p.role!=='spectator' && p.status !== 'abandoned'); const t=playingPlayers.length;
+        let sorted = [...playingPlayers].sort((a, b) => { let aScore = a.status === 'finished' ? a.finishOrder : (a.status === 'miyako' ? 100 : 200 + a.finishOrder); let bScore = b.status === 'finished' ? b.finishOrder : (b.status === 'miyako' ? 100 : 200 + b.finishOrder); return aScore - bScore; });
+        let rankMap = t>=5 ? [0,1,2,3,4] : t===4 ? [0,1,3,4] : t===3 ? [0,2,4] : [0,4];
+        sorted.forEach((p, idx) => { p.rank = rankMap[idx] !== undefined ? rankMap[idx] : 4; p.score = (p.score || 0) + (RANK_SCORES[p.rank] || 0); });
+        if(hostState.gekokujo) { hostState.players.filter(p=>p.role!=='spectator').forEach(p=>{ if(p.rank===0) p.rank=4; else if(p.rank===4) p.rank=0; else if(p.rank===1) p.rank=3; else if(p.rank===3) p.rank=1; }); hostState.gekokujoTriggeredLastTime=true; }
+        hostState.history.push({ round: hostState.round, results: hostState.players.filter(p=>p.status!=='abandoned').map(p => ({ id: p.id, name: p.name, rank: p.rank, scoreDelta: RANK_SCORES[p.rank]||0, role: p.role })) });
+        hostState.phase='RESULT'; broadcastState();
+        setTimeout(()=>{ const isFinal = hostState.rules.totalRounds && hostState.round >= hostState.rules.totalRounds && hostState.rules.totalRounds !== 999; if(isFinal) { const m=hostState.players.find(p=>p.id===me.id); if(m && m.role!=='spectator' && m.status!=='abandoned') { let sortedScores = [...hostState.players.filter(p=>p.role!=='spectator'&&p.status!=='abandoned')].sort((a,b)=>b.score - a.score); let myIndex = sortedScores.findIndex(p=>p.id===me.id); let finalRankScore = myIndex === 0 ? 100 : (myIndex === 1 ? 80 : (myIndex === sortedScores.length-1 ? 0 : 50)); window.parent.postMessage({type:'gameOver',score:finalRankScore},'*'); } else if (m) { window.parent.postMessage({type:'gameOver',score:0},'*'); } } }, 1000);
+    }
+}
+
+function enterLobby() {
+    UI.switchScreen('lobby'); document.getElementById('chat-system').style.display = 'flex'; document.getElementById('global-turn-timer').classList.remove('show');
+    const scEl = document.getElementById('lobby-short-code');
+    if(scEl) { const sc = isHost ? (hostState && hostState.shortCode) : (roomCodeMap[currentRoomId] || (clientState && clientState.shortCode)); if(sc) scEl.innerText = sc; }
+    const cToggle = document.getElementById('lobby-cpu-toggle'); const cDiff = document.getElementById('lobby-cpu-diff');
+    if(isHost) { 
+        cToggle.disabled = false; cDiff.disabled = false; document.getElementById('btn-start-game').classList.remove('hidden'); document.getElementById('btn-open-settings').classList.remove('hidden'); document.getElementById('non-host-status-box').classList.add('hidden'); document.getElementById('host-msg').innerText="👑 あなたがオーナーです。開始ボタンを押してください。"; 
+        if(lobbySyncInterval) clearInterval(lobbySyncInterval); lobbySyncInterval = setInterval(() => { if(hostState && hostState.phase === 'LOBBY') broadcastState(); else clearInterval(lobbySyncInterval); }, 3000);
+    } else { 
+        cToggle.disabled = true; cDiff.disabled = true; document.getElementById('btn-start-game').classList.add('hidden'); document.getElementById('btn-open-settings').classList.add('hidden'); document.getElementById('non-host-status-box').classList.remove('hidden'); document.getElementById('host-msg').innerText="⏳ ホストがゲームを開始するのを待っています..."; 
+    }
+}
+
+function updateClientState(ns) {
+    const o = clientState.phase; clientState = ns;
+    if (ns.shortCode && currentRoomId) {
+        roomCodeMap[currentRoomId] = ns.shortCode;
+        const scEl = document.getElementById('lobby-short-code'); if(scEl) scEl.innerText = ns.shortCode;
+    }
+    const myInfo = clientState.players.find(p=>p.id===me.id);
+    if(myInfo) {
+        myRole = myInfo.role; const oStatus = clientState.players.find(p=>p.id===me.id)?.status; const wasFinished = oStatus === 'finished' || oStatus === 'miyako' || oStatus === 'penalized' || oStatus === 'abandoned'; const isFinished = myInfo.status === 'finished' || myInfo.status === 'miyako' || myInfo.status === 'penalized' || myInfo.status === 'abandoned';
+        if(clientState.phase === 'PLAY' && !wasFinished && isFinished && myInfo.status !== 'abandoned') { showSpectatorNotify(); }
+    }
+    
+    if(ns.phase === 'PLAY' && !ns.isDelaying && !ns.interaction && !ns.exchange) {
+        let activePlayer = ns.players[ns.turnIdx];
+        if (activePlayer && activePlayer.status === 'playing' && !activePlayer.isCpu && activePlayer.role !== 'spectator') {
+            if (clientTimerActivePlayerId !== activePlayer.id || Math.abs(currentClientTurnTime - activePlayer.turnTime) > 1) { currentClientTurnTime = activePlayer.turnTime; clientTimerActivePlayerId = activePlayer.id; }
+            if(!clientTimerInterval) startClientTimer();
+        } else { if(clientTimerInterval) { clearInterval(clientTimerInterval); clientTimerInterval = null; } clientTimerActivePlayerId = null; }
+    } else { if(clientTimerInterval) { clearInterval(clientTimerInterval); clientTimerInterval = null; } clientTimerActivePlayerId = null; }
+
+    if(ns.phase==='LOBBY') { 
+        const frag = document.createDocumentFragment();
+        ns.players.forEach(p => {
+            const div = document.createElement('div'); div.className = 'lobby-player-card'; let sClass = 'ready'; let sText = '';
+            if(p.isHost) { sClass = 'host'; sText = '👑 Host'; } else if(p.isCpu) { sClass = 'cpu'; sText = '🤖 CPU'; } else if(p.role === 'spectator') { sClass = 'spec'; sText = '👁️ 観戦'; } else if(p.disconnected) { sClass = 'disconnected'; sText = '🔌 切断'; div.style.filter = 'grayscale(100%) opacity(0.6)'; } else if(p.status === 'abandoned') { sClass = 'abandoned'; sText = '🚪 退室済'; div.style.filter = 'grayscale(100%) opacity(0.4)'; }
+            div.innerHTML = `<img src="${p.portrait||'https://api.dicebear.com/7.x/bottts/svg?seed='+Math.random()}" loading="lazy" decoding="async"><div class="lobby-player-info"><div class="p-name">${p.name.substring(0,8)}</div><div class="p-status ${sClass}">${sText}</div></div>`;
+            frag.appendChild(div);
+        });
+        DOM.lobbyPlayers.innerHTML = ''; DOM.lobbyPlayers.appendChild(frag);
+                // 人数表示更新
+                const pcEl = document.getElementById('lobby-player-count');
+                if(pcEl) {
+                    const activePlayers = ns.players.filter(p => p.role !== 'spectator' && p.status !== 'abandoned' && !p.isCpu);
+                    const maxP = ns.maxPlayers || hostState?.maxPlayers || 5;
+                    pcEl.innerText = '👥 ' + activePlayers.length + ' / ' + maxP + ' 人';
+                }
+        document.getElementById('lobby-cpu-toggle').checked = ns.rules.cpuEnabled; document.getElementById('lobby-cpu-diff').value = ns.rules.cpuDifficulty;
+        const modal = document.getElementById('host-settings-modal'); if (modal && !modal.classList.contains('hidden')) { window.openSettingTab(currentSettingsTab); }
+        if(isHost) { const activeHumans = ns.players.filter(p => !p.isCpu && !p.disconnected && p.role !== 'spectator' && p.status !== 'abandoned'); const btnS = document.getElementById('btn-start-game'); const maxP2 = ns.maxPlayers || 5;
+                        const totalActive = ns.players.filter(p => !p.disconnected && p.status !== 'abandoned' && p.role !== 'spectator').length;
+                        const needMore = totalActive < maxP2 && !ns.rules.cpuEnabled;
+                        if(activeHumans.length < 2 || needMore) {
+                            btnS.disabled = true;
+                            btnS.innerText = needMore ? `参加待ち (${totalActive}/${maxP2}人)` : "プレイヤー不足";
+                            btnS.style.opacity = '0.5';
+                        } else { btnS.disabled = false; btnS.innerText = "🎮 ゲーム開始！"; btnS.style.opacity = '1'; } }
+    }
+    else if(ns.phase==='EXCHANGE') {
+        document.getElementById('global-turn-timer').classList.remove('show');
+        if(o!=='EXCHANGE') {
+            UI.switchScreen('game'); selectedCards=[]; prevBoardCardIds=[]; window.isProcessingClient=false;
+            const _myRole2 = (ns.players.find(p=>p.id===me.id)||{}).role;
+            if(_myRole2 === 'spectator') { viewingPlayerId=null; _showSpectatorPick(ns); }
+            else { viewingPlayerId=null; UI.showActionAnim("🔄 カード交換..."); requestAnimationFrame(renderGame); }
+        } else { requestAnimationFrame(renderGame); }
+    }
+    else if(ns.phase==='PLAY') {
+        if(o!=='PLAY') {
+            UI.switchScreen('game'); selectedCards=[]; prevBoardCardIds=[]; window.isProcessingClient=false;
+            const _myRole = (ns.players.find(p=>p.id===me.id)||{}).role;
+            if(_myRole === 'spectator') { viewingPlayerId=null; _showSpectatorPick(ns); }
+            else { viewingPlayerId=null; requestAnimationFrame(renderGame); }
+        } else { requestAnimationFrame(renderGame); }
+    }
+    else if(ns.phase==='RESULT') { document.getElementById('global-turn-timer').classList.remove('show'); if(o!=='RESULT') renderResult(); }
+}
+
+window.executeAutoPassImmediate = function() {
+    if(window.isProcessingClient || myRole === 'spectator') return; window.isProcessingClient = true; window.autoPassTriggeredForTurn = true;
+    let popup = document.getElementById('auto-pass-popup');
+    if(!popup) { popup = document.createElement('div'); popup.id = 'auto-pass-popup'; popup.style.cssText = "position: absolute; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); border: 2px solid var(--secondary); padding: 8px 20px; border-radius: 20px; color: white; font-weight: 900; font-size: 14px; z-index: 3000; pointer-events: none; opacity: 0; transition: opacity 0.2s, bottom 0.2s; box-shadow: 0 8px 20px rgba(0,0,0,0.6); white-space: nowrap;"; popup.innerHTML = "🤖 自動パス"; document.getElementById('game-screen').appendChild(popup); }
+    const handContainer = document.getElementById('hand-area-container'); const hHeight = handContainer ? handContainer.offsetHeight : 150; popup.style.bottom = (hHeight + 15) + 'px'; popup.style.opacity = '1';
+    if(popup.hideTimeout) clearTimeout(popup.hideTimeout); popup.hideTimeout = setTimeout(() => { popup.style.opacity = '0'; }, 1800);
+    sendMsg({type:'ACTION', action:{type:'PASS'}}); selectedCards = []; setTimeout(() => { window.isProcessingClient = false; }, 300);
+};
+
+
+// ===== 観戦機能 =====
+let _specGuideShown = false;
+
+function _showSpectatorPick(ns) {
+    // 既存オーバーレイ除去
+    const ex = document.getElementById('_spec_pick'); if(ex) ex.remove();
+    const players = (ns.players||[]).filter(p=>p.role!=='spectator' && p.status!=='abandoned');
+    if(!players.length) { requestAnimationFrame(renderGame); return; }
+
+    const ov = document.createElement('div');
+    ov.id = '_spec_pick';
+    ov.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.25);z-index:8000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:20px;box-sizing:border-box;';
+
+    const ttl = document.createElement('div');
+    ttl.style.cssText = 'font-size:20px;font-weight:900;color:var(--accent);text-align:center;';
+    ttl.innerText = '👁️ 誰の手札を表示しますか？';
+    ov.appendChild(ttl);
+
+    const sub = document.createElement('div');
+    sub.style.cssText = 'font-size:12px;color:#aaa;font-weight:bold;text-align:center;margin-top:-6px;';
+    sub.innerText = '後からステータスをタップして変更できます';
+    ov.appendChild(sub);
+
+    const list = document.createElement('div');
+    list.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:85%;max-width:320px;max-height:52vh;overflow-y:auto;';
+
+    players.forEach(p => {
+        const hc = p.handCount!==undefined ? p.handCount : (p.hand ? p.hand.length : '?');
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background 0.15s;';
+        row.innerHTML = '<img src="'+( p.portrait||'https://api.dicebear.com/7.x/bottts/svg?seed='+p.id )+'" style="width:34px;height:34px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;background:#fff;flex-shrink:0;" loading="lazy">'
+            + '<span style="flex:1;font-size:15px;font-weight:900;color:#fff;">'+( (p.name||'').substring(0,10) )+'</span>'
+            + '<span style="font-size:12px;color:#aaa;flex-shrink:0;">🃏 '+hc+'枚</span>';
+        row.addEventListener('pointerdown', function(){ this.style.background='rgba(255,230,109,0.2)'; this.style.borderColor='var(--accent)'; });
+        row.addEventListener('pointerleave', function(){ this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; });
+        row.addEventListener('pointerup', (function(pid){ return function(){
+            viewingPlayerId = pid;
+            ov.remove();
+            requestAnimationFrame(renderGame);
+            _showSpecGuide();
+        }; })(p.id));
+        list.appendChild(row);
+    });
+    ov.appendChild(list);
+
+    const skip = document.createElement('div');
+    skip.style.cssText = 'color:#888;font-size:13px;font-weight:bold;padding:6px 16px;cursor:pointer;text-decoration:underline;margin-top:4px;';
+    skip.innerText = 'まず全体を見る';
+    skip.addEventListener('pointerup', function(){
+        viewingPlayerId = null; ov.remove(); requestAnimationFrame(renderGame); _showSpecGuide();
+    });
+    ov.appendChild(skip);
+
+    document.getElementById('game-container').appendChild(ov);
+}
+
+function _showSpecGuide() {
+    if(_specGuideShown) return; _specGuideShown = true;
+    const g = document.createElement('div');
+    g.style.cssText = 'position:absolute;bottom:30%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);border:2px solid var(--accent);border-radius:14px;padding:10px 16px;font-size:13px;font-weight:900;color:#fff;z-index:7000;pointer-events:none;text-align:center;max-width:80vw;box-shadow:0 8px 24px rgba(0,0,0,0.7);white-space:pre-line;animation:popIn 4s ease-in-out forwards;';
+    g.innerText = '💡 ステータスをタップすると\n他プレイヤーの手札も確認できます';
+    document.getElementById('game-container').appendChild(g);
+    setTimeout(()=>{ if(g.parentNode) g.parentNode.removeChild(g); }, 4000);
+}
+
+window.spectatorChangePick = function() {
+    if(!clientState || clientState.phase==='LOBBY') return;
+    const mi = clientState.players.find(p=>p.id===me.id);
+    if(!mi) return;
+    const canView = mi.role==='spectator' || ['finished','miyako','penalized','abandoned'].includes(mi.status);
+    if(!canView) return;
+    _showSpectatorPick(clientState);
+};
+
+function validatePlay(cards, s) {
+    if(cards.length===0) return false;
+    const rev = s.isRev ^ s.isJBack, f = s.board.cards.length===0; const sgl=cards.length===1; const nonJoker = cards.find(c=>c.s!=='JOKER'); const targetR = nonJoker ? nonJoker.r : 0; const pr = cards.length>1 && cards.every(c=>c.r===targetR||c.s==='JOKER');
+    let so=[...cards].sort((a,b)=>getBaseStr(a)-getBaseStr(b)); const st = cards.length>=3 && (()=>{ const su=cards.filter(c=>c.s!=='JOKER'); if(new Set(su.map(c=>c.s)).size>1) return false; let l=getBaseStr(so[0]), j=cards.length-su.length; for(let i=1;i<so.length;i++){ if(so[i].s==='JOKER') continue; let d=getBaseStr(so[i])-l; if(d!==1) { j-=(d-1); if(j<0) return false; } l=getBaseStr(so[i]); } return true; })();
+    let type = sgl ? 'single' : (pr ? 'pair' : (st ? 'seq' : 'none')); if(type === 'none') return false;
+    if(!f) { if(s.board.type !== type) return false; if(s.board.cards.length !== cards.length) return false; }
+    if(getStr(so[0],rev) <= s.board.strength) { if(s.rules.spade3&&sgl&&so[0].id==='S3'&&s.board.cards[0].s==='JOKER') return true; return false; }
+    let isAllJoker = cards.every(c => c.s === 'JOKER'); if(s.isKaidanBind && !isAllJoker && getStr(so[0], rev) !== s.board.strength + 1) return false;
+    if(s.rules.suitBind && s.bindSuits.length>0) { let su=cards.map(c=>c.s).filter(x=>x!=='JOKER'); let missing = s.bindSuits.filter(x=>!su.includes(x)); let jokers = cards.filter(c=>c.s==='JOKER').length; if(missing.length > jokers) return false; }
+    return true;
+}
+
+function handlePlayerClick(targetPid) {
+    const m = clientState.players.find(p=>p.id===me.id); const isSpec = m.role === 'spectator'; const isFinished = m.status === 'finished' || m.status === 'miyako' || m.status === 'penalized' || m.status === 'abandoned';
+    if(isSpec || isFinished) { if(viewingPlayerId === targetPid) { viewingPlayerId = null; } else { viewingPlayerId = targetPid; } requestAnimationFrame(renderGame); }
+}
+
+function renderGame() {
+    if(clientState.isRev) document.body.classList.add('bg-revolution'); else document.body.classList.remove('bg-revolution');
+    const gcEl = document.getElementById('game-room-code');
+    if(gcEl) { const sc = isHost ? (hostState && hostState.shortCode) : (clientState && clientState.shortCode); if(sc) { gcEl.innerText = sc; gcEl.style.display = 'block'; } else { gcEl.style.display = 'none'; } }
+    document.getElementById('game-round-badge').innerText = `Round: ${clientState.round}${clientState.rules.totalRounds!==999 ? ' / '+clientState.rules.totalRounds : ''}`;
+    DOM.badgeRev.className = `status-badge badge-rev ${clientState.isRev ? 'active' : ''}`; DOM.badgeJBack.className = `status-badge badge-jback ${clientState.isJBack ? 'active' : ''}`; DOM.badgeRevDir.className = `status-badge badge-revdir ${clientState.direction===-1 ? 'active' : ''}`;
+    if(clientState.bindSuits.length > 0) { DOM.badgeBind.className = 'status-badge badge-bind active'; document.getElementById('bind-suit-text').innerText = clientState.bindSuits.map(s => SUIT_MARKS[s]).join(''); } else { DOM.badgeBind.className = 'status-badge badge-bind'; }
+    DOM.badgeKaidan.className = `status-badge badge-kaidan ${clientState.isKaidanBind ? 'active' : ''}`;
+
+    const m = clientState.players.find(p=>p.id===me.id); const isSpec = m && m.role === 'spectator'; const isFinished = m && (m.status === 'finished' || m.status === 'miyako' || m.status === 'penalized' || m.status === 'abandoned'); const canViewOthers = isSpec || isFinished;
+    const myTurn = !isSpec && m && clientState.turnIdx===clientState.players.findIndex(p=>p.id===me.id) && m.status==='playing';
+    const intData = clientState.interaction; const isMyInteract = !isSpec && intData && intData.playerId === me.id && intData.queue.length > 0;
+    const myPending = !isSpec && clientState.phase === 'EXCHANGE' && clientState.exchange && clientState.exchange.pending && clientState.exchange.pending[me.id];
+
+    if (myTurn && !window.myTurnState && clientState.phase === 'PLAY' && !clientState.isDelaying) { window.myTurnState = true; showCentralTurnPopup(); } else if ((!myTurn || clientState.phase !== 'PLAY') && window.myTurnState) { window.myTurnState = false; }
+    const handAreaEl = document.getElementById('hand-area-container'); if(myTurn || isMyInteract || myPending) handAreaEl.classList.add('active-turn'); else handAreaEl.classList.remove('active-turn');
+
+    const tsw = document.getElementById('turn-status-window'), tswName = document.getElementById('tsw-name'), tswText = document.getElementById('tsw-text');
+    if(clientState.phase === 'EXCHANGE') { tsw.classList.remove('hidden'); tsw.classList.remove('my-turn'); tswName.innerText = myPending ? "カード選択中" : "待機中"; tswText.innerText = myPending ? "不要なカードを選んでください" : "上位者がカードを選んでいます"; }
+    else if(isMyInteract) { tsw.classList.remove('hidden'); tsw.classList.add('my-turn'); tswName.innerText = "指示待機"; tswText.innerText = "カードまたは数字を選んでください"; }
+    else if(clientState.isDelaying) { tsw.classList.remove('hidden'); tsw.classList.remove('my-turn'); tswName.innerText = "場を流しています"; tswText.innerText = clientState.board.cards.some(c=>c.r===8) ? "✂️ 8切り！" : "🧹 全員パス"; }
+    else if(clientState.phase === 'PLAY') {
+        tsw.classList.remove('hidden');
+        if(myTurn) { tsw.classList.add('my-turn'); tswName.innerText = "あなた"; tswText.innerText = "の番です！"; } 
+        else { tsw.classList.remove('my-turn'); let cp = clientState.players[clientState.turnIdx]; if(cp) { tswName.innerText = cp.status === 'abandoned' ? "退室済" : (cp.disconnected ? "切断中" : cp.name.substring(0,8)); tswText.innerText = (cp.disconnected || cp.status === 'abandoned') ? "スキップします..." : "の番です"; } }
+    } else { tsw.classList.add('hidden'); }
+
+    if (myTurn && !isMyInteract && clientState.phase === 'PLAY') {
+        const isAutoPassOn = document.getElementById('toggle-auto-pass').checked;
+        if (isAutoPassOn && !window.autoPassTriggeredForTurn && !clientState.isDelaying && !window.isProcessingClient) {
+            if (!canPlayAnyCard(m.hand, clientState)) { window.autoPassTriggeredForTurn = true; setTimeout(() => {
+    if (window.myTurnState && document.getElementById('toggle-auto-pass').checked && !window.isProcessingClient) {
+        if (!canPlayAnyCard(clientState.players.find(p=>p.id===me.id)?.hand || [], clientState)) {
+            executeAutoPassImmediate();
+        } else { window.autoPassTriggeredForTurn = false; }
+    } else { window.autoPassTriggeredForTurn = false; }
+}, 2500); }
+        }
+    } else { if (!myTurn || clientState.isDelaying) window.autoPassTriggeredForTurn = false; }
+
+    const sAction = document.getElementById('special-action-window'), sContent = document.getElementById('special-action-content'), nc = document.getElementById('normal-controls');
+    sAction.classList.add('hidden'); nc.classList.add('hidden');
+    
+    if(clientState.phase === 'EXCHANGE' && myPending) {
+        sAction.classList.remove('hidden'); sContent.innerHTML = `<h3 style="margin:0 0 5px 0; color:var(--accent); font-size:18px;">🎁 渡すカードを選択 <span style="color:${selectedCards.length===myPending.count?'#2ecc71':'var(--active-glow)'}; font-size:22px; font-weight:900;>${selectedCards.length}/${myPending.count}</span></h3><div style="display:flex; justify-content:center; gap:10px;"><button id="btn-resolve" ${selectedCards.length !== myPending.count ? 'disabled' : ''} style="padding:10px 24px; font-size:18px;">決定</button><button id="btn-interact-clear" class="btn-gray" style="padding:10px 18px;">リセット</button></div>`;
+        document.getElementById('btn-interact-clear').onclick = () => { selectedCards=[]; requestAnimationFrame(renderGame); }; document.getElementById('btn-resolve').onclick = () => { sendMsg({type:'ACTION', action:{type:'EXCHANGE_OFFER', cardIds:selectedCards}}); selectedCards=[]; };
+    } else if(isMyInteract && clientState.phase === 'PLAY') {
+        let currentInt = intData.queue[0]; sAction.classList.remove('hidden');
+        if(currentInt.type === 'BOMBER') {
+            sContent.innerHTML = `<h3 style="margin:0 0 5px 0; color:#e74c3c; font-size:20px;">💣 ボンバー発動！</h3><div style="font-size:12px; color:#ccc; margin-bottom:10px;">消滅させる数字を1つ選択</div><div id="bomber-buttons" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px;"></div>`;
+            const bb = document.getElementById('bomber-buttons'); [3,4,5,6,7,8,9,10,11,12,13,1,2].forEach(r => { let b = document.createElement('button'); b.style.cssText = "padding:8px 0; font-size:16px; margin:0;"; b.innerText = r===1?'A':r===11?'J':r===12?'Q':r===13?'K':r; b.onclick = () => { sendMsg({type:'ACTION', action:{type:'RESOLVE_BOMBER', bomberRank: r}}); sAction.classList.add('hidden'); }; bb.appendChild(b); });
+        } else {
+            const titleText = currentInt.type === 'SEVEN' ? `🎁 次へ渡す: ${currentInt.count}枚` : `🗑 捨てる: ${currentInt.count}枚`; sContent.innerHTML = `<h3 style="margin:0 0 5px 0; color:var(--active-glow); font-size:20px;">${titleText}</h3><div style="display:flex; justify-content:center; gap:10px;"><button id="btn-resolve" ${selectedCards.length !== currentInt.count ? 'disabled' : ''} style="padding:10px 24px; font-size:18px;">決定</button><button id="btn-interact-clear" class="btn-gray" style="padding:10px 18px;">リセット</button></div>`;
+            document.getElementById('btn-interact-clear').onclick = () => { selectedCards=[]; requestAnimationFrame(renderGame); }; document.getElementById('btn-resolve').onclick = () => { sendMsg({type:'ACTION', action:{type:'RESOLVE_INTERACT', cardIds:selectedCards}}); selectedCards=[]; };
+        }
+    } else if(clientState.phase === 'PLAY' && !isSpec && !isFinished) { nc.classList.remove('hidden'); }
+    
+    const gTimerEl = document.getElementById('global-turn-timer');
+    if (clientState.phase === 'PLAY' && !clientState.isDelaying && !isMyInteract) {
+        let activePlayer = clientState.players[clientState.turnIdx];
+        if (myTurn && activePlayer && activePlayer.status === 'playing' && !activePlayer.isCpu && activePlayer.role !== 'spectator') {
+            gTimerEl.classList.add('show'); const gTimerSecEl = document.getElementById('g-timer-sec'); let t = currentClientTurnTime; gTimerSecEl.innerText = t;
+            if(t <= 20) gTimerEl.classList.add('timer-warn'); else gTimerEl.classList.remove('timer-warn');
+            if(lastSyncTurnTime !== t && (t === 40 || t === 20)) { gTimerEl.classList.remove('anim-global-timer-pop'); void gTimerEl.offsetWidth; gTimerEl.classList.add('anim-global-timer-pop'); } lastSyncTurnTime = t;
+        } else { gTimerEl.classList.remove('show'); }
+    } else { gTimerEl.classList.remove('show'); }
+
+    const playersArea = DOM.playersArea; let myIndex = clientState.players.findIndex(p => p.id === me.id); let orderedOpponents = []; 
+    let displayPlayers = clientState.players.filter(p=>p.role !== 'spectator' || p.id === me.id);
+    if(!isSpec && myIndex !== -1) { let dMyIndex = displayPlayers.findIndex(p=>p.id===me.id); for(let i=1; i<displayPlayers.length; i++) { let idx = (dMyIndex + i) % displayPlayers.length; orderedOpponents.push({ p: displayPlayers[idx], originalIndex: clientState.players.findIndex(x=>x.id===displayPlayers[idx].id) }); } } 
+    else { orderedOpponents = displayPlayers.map(p => ({p, originalIndex: clientState.players.findIndex(x=>x.id===p.id)})); }
+    
+    const currentIds = orderedOpponents.map(opp => opp.p.id); const existingDivs = {};
+    Array.from(playersArea.children).forEach(child => { if (child.classList.contains('player-status')) { const pid = child.getAttribute('data-pid'); if (currentIds.includes(pid)) existingDivs[pid] = child; else child.remove(); } else { child.remove(); } });
+
+    orderedOpponents.forEach((opp, i) => {
+        if (i > 0) { const arrowDiv = document.createElement('div'); arrowDiv.className = `turn-arrow ${clientState.direction === 1 ? 'arrow-normal' : 'arrow-reverse'}`; arrowDiv.innerHTML = clientState.direction === 1 ? '▶' : '◀'; playersArea.appendChild(arrowDiv); }
+        let playerDiv = existingDivs[opp.p.id];
+        if (!playerDiv) {
+            playerDiv = document.createElement('div'); playerDiv.className = 'player-status'; playerDiv.setAttribute('data-pid', opp.p.id);
+            playerDiv.innerHTML = `<div class="player-icon-container"><img class="p-icon" src="" style="width:30px; height:30px; border-radius:50%; border:2px solid #fff; background:#fff; object-fit:cover; position:relative; z-index:3;"><svg class="timer-ring" viewBox="0 0 36 36" style="width:40px; height:40px; position:absolute; top:0; left:0;"><circle class="timer-circle-bg" cx="18" cy="18" r="15.9155"></circle><circle class="timer-circle-fg" cx="18" cy="18" r="15.9155"></circle></svg></div><div class="p-name" style="font-weight:bold; font-size:11px; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60px; z-index:4;"></div><div class="p-rank rank-tag" style="font-size:9px; margin-top:0; z-index:4;"></div><div class="p-hand" style="font-size:12px; margin:1px 0; z-index:4;"></div><div class="p-status-txt" style="font-size:10px; min-height:12px; font-weight:900; z-index:4;"></div>`;
+            playersArea.appendChild(playerDiv); playerDiv.onclick = () => handlePlayerClick(opp.p.id);
+        } else { playersArea.appendChild(playerDiv); }
+
+        const isTurn = (clientState.turnIdx === opp.originalIndex && clientState.phase === 'PLAY' && !clientState.isDelaying);
+        playerDiv.className = `player-status ${isTurn ? 'active-turn' : ''}`;
+        if(canViewOthers && opp.p.role !== 'spectator' && opp.p.id !== me.id) { playerDiv.classList.add('clickable'); if(viewingPlayerId === opp.p.id) playerDiv.classList.add('viewing'); } 
+        else { playerDiv.classList.remove('clickable'); playerDiv.classList.remove('viewing'); }
+
+        const imgEl = playerDiv.querySelector('.p-icon'); const portraitUrl = opp.p.portrait || `https://api.dicebear.com/7.x/bottts/svg?seed=${opp.p.id}`; if(imgEl.src !== portraitUrl) imgEl.src = portraitUrl;
+        if(opp.p.disconnected || opp.p.status === 'abandoned') { imgEl.style.filter = 'grayscale(100%) opacity(0.4)'; playerDiv.style.opacity='0.5'; playerDiv.style.filter='grayscale(80%)'; } else { imgEl.style.filter = 'none'; playerDiv.style.opacity='1'; playerDiv.style.filter='none'; }
+
+        let currentT = isTurn ? currentClientTurnTime : (opp.p.turnTime || 0); let timeRatio = currentT / 60; let timerClass = ""; if(timeRatio <= 0.33) timerClass = "timer-danger"; else if(timeRatio <= 0.66) timerClass = "timer-warning";
+        let dashOffset = 100 - (timeRatio * 100); const ringEl = playerDiv.querySelector('.timer-ring'); ringEl.className.baseVal = `timer-ring ${timerClass}`; playerDiv.querySelector('.timer-circle-fg').style.strokeDashoffset = dashOffset;
+
+        playerDiv.querySelector('.p-name').innerText = opp.p.name.substring(0,6);
+        let dRank = (opp.p.status==='finished' || opp.p.status==='miyako' || opp.p.status==='penalized' || opp.p.status==='abandoned') ? opp.p.rank : opp.p.lastRank;
+        let rankExtraClass = clientState.round > 1 ? 'rank-badge-glow' : ''; const rankEl = playerDiv.querySelector('.p-rank');
+        if(opp.p.role === 'spectator') { rankEl.className = `p-rank rank-tag`; rankEl.style.background = '#9b59b6'; rankEl.style.color = '#fff'; rankEl.innerText = "観戦"; } 
+        else { rankEl.className = `p-rank rank-tag rank-${dRank} ${rankExtraClass}`; rankEl.innerText = RANK_NAMES_CLEAN[dRank]; }
+        playerDiv.querySelector('.p-hand').innerText = opp.p.role === 'spectator' ? '👁️' : `🃏${opp.p.handCount}`;
+
+        let statusText = '', statusColor = '#ddd';
+        if(opp.p.role === 'spectator') { statusText = '観戦中'; statusColor = '#aaa'; }
+        else if (opp.p.status === 'abandoned') { statusText = '🚪退室済'; statusColor = '#7f8c8d'; } 
+        else if (opp.p.disconnected) { statusText = '🔌切断'; statusColor = '#ff7675'; } 
+        else if (opp.p.status === 'passed') { statusText = 'パス'; statusColor = '#ff7675'; } 
+        else if (['finished', 'miyako', 'penalized'].includes(opp.p.status)) { statusText = '上がり'; statusColor = '#ddd'; } 
+        else if (isTurn) { statusText = '考え中'; statusColor = '#ddd'; }
+        
+        const statusEl = playerDiv.querySelector('.p-status-txt'); statusEl.innerText = statusText; statusEl.style.color = statusColor;
+    });
+
+    const myStatusArea = document.getElementById('my-status-area');
+    if (!isSpec && myIndex !== -1) {
+        const myP = clientState.players[myIndex]; 
+        if (myStatusArea.children.length === 0) {
+            myStatusArea.innerHTML = `<div class="my-icon-container"><img class="my-icon" src="" style="width:30px; height:30px; border-radius:50%; border:2px solid var(--active-glow); background:#fff; object-fit:cover; position:relative; z-index:3;"><svg class="timer-ring" viewBox="0 0 36 36" style="width:40px; height:40px; position:absolute; top:0; left:0;"><circle class="timer-circle-bg" cx="18" cy="18" r="15.9155"></circle><circle class="timer-circle-fg" cx="18" cy="18" r="15.9155"></circle></svg></div><div style="display:flex; flex-direction:column; justify-content:center;"><div class="my-name" style="font-weight:bold; font-size:13px; color:var(--active-glow); white-space:nowrap; max-width:80px; overflow:hidden; text-overflow:ellipsis;"></div><div class="my-rank rank-tag" style="font-size:9px; display:inline-block; align-self:flex-start; margin-top:2px;"></div></div><div style="margin-left:4px; font-size:11px; font-weight:bold; display:flex; flex-direction:column; align-items:center;"><span class="my-status-txt"></span></div>`;
+        }
+
+        const isTurn = (clientState.turnIdx === myIndex && clientState.phase === 'PLAY' && !clientState.isDelaying);
+        myStatusArea.className = isTurn ? 'active-turn' : '';
+        if(canViewOthers) { myStatusArea.classList.add('clickable'); if(viewingPlayerId === me.id || viewingPlayerId === null) myStatusArea.classList.add('viewing'); myStatusArea.onclick = () => handlePlayerClick(me.id); } 
+        else { myStatusArea.classList.remove('clickable'); myStatusArea.classList.remove('viewing'); myStatusArea.onclick = null; }
+
+        const imgEl = myStatusArea.querySelector('.my-icon'); const portraitUrl = myP.portrait || `https://api.dicebear.com/7.x/bottts/svg?seed=${myP.id}`; if(imgEl.src !== portraitUrl) imgEl.src = portraitUrl;
+        if(myP.disconnected || myP.status === 'abandoned') imgEl.style.filter = 'grayscale(100%) opacity(0.4)'; else imgEl.style.filter = 'none';
+
+        let currentT = isTurn ? currentClientTurnTime : (myP.turnTime || 0); let timeRatio = currentT / 60; let timerClass = ""; if(timeRatio <= 0.33) timerClass = "timer-danger"; else if(timeRatio <= 0.66) timerClass = "timer-warning";
+        let dashOffset = 100 - (timeRatio * 100); const ringEl = myStatusArea.querySelector('.timer-ring'); ringEl.className.baseVal = `timer-ring ${timerClass}`; myStatusArea.querySelector('.timer-circle-fg').style.strokeDashoffset = dashOffset;
+        myStatusArea.querySelector('.my-name').innerText = myP.name;
+
+        let mRank = (myP.status==='finished' || myP.status==='miyako' || myP.status==='penalized' || myP.status==='abandoned') ? myP.rank : myP.lastRank;
+        let rankExtraClass = clientState.round > 1 ? 'rank-badge-glow' : ''; const rankEl = myStatusArea.querySelector('.my-rank');
+        rankEl.className = `my-rank rank-tag rank-${mRank} ${rankExtraClass}`; rankEl.innerText = RANK_NAMES_CLEAN[mRank];
+
+        let myStatusText = '', myStatusColor = '#ddd';
+        if (myP.status === 'abandoned') { myStatusText = '🚪退室済'; myStatusColor = '#7f8c8d'; }
+        else if (myP.disconnected) { myStatusText = '🔌切断'; myStatusColor = '#ff7675'; } 
+        else if (myP.status === 'passed') { myStatusText = 'パス'; myStatusColor = '#ff7675'; } 
+        else if (['finished', 'miyako', 'penalized'].includes(myP.status)) { myStatusText = '上がり'; myStatusColor = '#ddd'; } 
+        else if (isTurn) { myStatusText = '考え中'; myStatusColor = '#ddd'; }
+
+        const statusTxtEl = myStatusArea.querySelector('.my-status-txt'); statusTxtEl.innerText = myStatusText; statusTxtEl.parentElement.style.color = myStatusColor;
+        myStatusArea.style.display = 'flex';
+    } else { myStatusArea.style.display = 'none'; }
+
+    const historyFrag = document.createDocumentFragment(); const hasHistory = clientState.historyCards && clientState.historyCards.length > 0; const lastHistory = hasHistory ? clientState.historyCards[clientState.historyCards.length - 1] : null;
+    if (lastHistory && clientState.board.cards.length > 0) { DOM.historyCards.style.transform = `translate(calc(-50% - 25px), calc(-50% - 5px)) rotate(-6deg)`; DOM.boardCards.style.transform = `translate(calc(-50% + 25px), calc(-50% + 5px)) rotate(6deg)`; } 
+    else { DOM.historyCards.style.transform = `translate(-50%, -50%) rotate(0deg)`; DOM.boardCards.style.transform = `translate(-50%, -50%) rotate(0deg)`; }
+
+    if(lastHistory) {
+        const groupDiv = document.createElement('div'); groupDiv.className = 'history-card-group';
+        lastHistory.forEach((c, i) => { let el = createCardUI(c); el.classList.add('history-gray'); el.style.setProperty('--rot', (i - (lastHistory.length-1)/2) * 10); el.style.setProperty('--idx', i + 1); groupDiv.appendChild(el); });
+        historyFrag.appendChild(groupDiv);
+    }
+    DOM.historyCards.innerHTML = ''; DOM.historyCards.appendChild(historyFrag);
+
+    const boardFrag = document.createDocumentFragment();
+    clientState.board.cards.forEach((c,i)=>{ let el = createCardUI(c); el.style.setProperty('--rot', (i - (clientState.board.cards.length-1)/2) * 10); el.style.setProperty('--idx', i + 1); boardFrag.appendChild(el); });
+    DOM.boardCards.innerHTML=''; DOM.boardCards.appendChild(boardFrag);
+
+    let playableCardIds = new Set();
+    if(myTurn && clientState.phase === 'PLAY' && !clientState.isDelaying && !isMyInteract && !isSpec && viewingPlayerId === null) { playableCardIds = getPlayableCardIds(m.hand, clientState); }
+    
+    let targetHand = []; let isViewingOther = false;
+    if (viewingPlayerId && viewingPlayerId !== me.id && canViewOthers) {
+        const vp = clientState.players.find(p => p.id === viewingPlayerId);
+        if (vp && vp.hand) { targetHand = vp.hand; isViewingOther = true; const vLabel = document.getElementById('viewing-player-label'); const vn=document.getElementById('vlabel-name'); if(vn) vn.innerText=vp.name; vLabel.classList.add('show'); }
+    } else { if(m && m.hand) targetHand = m.hand; document.getElementById('viewing-player-label').classList.remove('show'); }
+
+    const handFrag = document.createDocumentFragment();
+    targetHand.forEach(c=>{
+        let el = createCardUI(c); const isSel = selectedCards.includes(c.id); if(isSel) el.classList.add('selected');
+        if(isViewingOther || isSpec || isFinished) { el.classList.add('disabled-card'); el.style.pointerEvents = 'none'; }
+        else if(myPending || (isMyInteract && clientState.phase === 'PLAY')) { } 
+        else if(myTurn && clientState.phase === 'PLAY' && !clientState.isDelaying) { 
+            if(selectedCards.length === 0) { if(!playableCardIds.has(c.id)) { el.classList.add('disabled-card'); } else { el.classList.add('playable-highlight'); } } 
+            else { const testCards = targetHand.filter(handCard => selectedCards.includes(handCard.id) || handCard.id === c.id); if(!isSel && !isPotentialPlay(testCards, clientState, targetHand)) { el.classList.add('disabled-card'); } else if (!isSel) { el.classList.add('playable-highlight'); } }
+        } else { el.classList.add('disabled-card'); el.style.pointerEvents = 'none'; }
+        
+        if(!isViewingOther && !isSpec && !isFinished) {
+            el.addEventListener('pointerdown', (e) => {
+                el.setPointerCapture(e.pointerId);
+                el.dataset.startX = e.clientX; el.dataset.startY = e.clientY; el.dataset.isDragging = 'false';
+            });
+            el.addEventListener('pointermove', (e) => {
+                if(el.dataset.startX === undefined) return;
+                const dx = Math.abs(e.clientX - parseFloat(el.dataset.startX));
+                if(dx > 10) el.dataset.isDragging = 'true';
+            });
+            el.addEventListener('pointerup', (e) => {
+                e.preventDefault();
+                const wasDragging = el.dataset.isDragging === 'true';
+                el.dataset.startX = undefined; el.dataset.isDragging = 'false';
+                if(wasDragging || window.isProcessingClient) return;
+                if(selectedCards.includes(c.id)) selectedCards = selectedCards.filter(x=>x!==c.id);
+                else selectedCards.push(c.id);
+                requestAnimationFrame(renderGame); });
+            el.addEventListener('pointercancel', () => { el.dataset.startX = undefined; el.dataset.isDragging = 'false'; });
+        }
+        handFrag.appendChild(el);
+    });
+    DOM.myHand.innerHTML=''; DOM.myHand.appendChild(handFrag);
+
+    DOM.btnPlay.disabled = !myTurn || selectedCards.length === 0 || clientState.isDelaying || clientState.phase !== 'PLAY' || isSpec || isFinished || isViewingOther;
+    DOM.btnPass.disabled = !myTurn || clientState.isDelaying || clientState.phase !== 'PLAY' || isSpec || isFinished || isViewingOther;
+
+    const currentBoardCardIds = clientState.board.cards.map(c => c.id); const newCardIds = currentBoardCardIds.filter(id => !prevBoardCardIds.includes(id));
+    if (newCardIds.length > 0 && clientState.lastAction && clientState.lastAction.actType === 'PLAY') {
+        const pId = clientState.lastAction.playerId; let sourceEl = document.querySelector(`.player-status[data-pid="${pId}"]`); if (pId === me.id) sourceEl = document.getElementById('my-status-area');
+        if (sourceEl) {
+            const sRect = sourceEl.getBoundingClientRect(); const startX = sRect.left + sRect.width / 2; const startY = sRect.bottom; 
+            newCardIds.forEach(id => {
+                const cardEl = document.getElementById(`board-card-${id}`);
+                if (cardEl) {
+                    const cRect = cardEl.getBoundingClientRect(); const endX = cRect.left + cRect.width / 2; const endY = cRect.top + cRect.height / 2; const deltaX = startX - endX; const deltaY = startY - endY;
+                    cardEl.animate([ { transform: `translate(${deltaX}px, ${deltaY}px) scale(0.3) rotate(0deg)`, opacity: 0 }, { transform: `translate(0px, 0px) scale(1.25) rotate(${cardEl.style.getPropertyValue('--rot')}deg)`, opacity: 1 } ], { duration: 450, easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)', fill: 'both' });
+                }
+            });
+        }
+    }
+    prevBoardCardIds = currentBoardCardIds;
+}
+
+function createCardUI(c) {
+    const el = document.createElement('div'); el.className = `card ${c.s==='H'||c.s==='D'?'red':'black'}`; el.id = `board-card-${c.id}`; 
+    let sc = c.s==='S'?'♠':c.s==='H'?'♥':c.s==='D'?'♦':c.s==='C'?'♣':''; let rankStr = c.r===1?'A':c.r===11?'J':c.r===12?'Q':c.r===13?'K':c.r;
+    if(c.s==='JOKER') { el.innerHTML = `<span style="position:absolute; top:4px; left:6px; color:var(--primary); font-size:16px;">★</span><span style="font-size:18px; margin-top:6px; color:#2F3542;">JOKER</span>`; } 
+    else { el.innerHTML = `<div class="card-top-left"><span class="card-tl-suit">${sc}</span><span class="card-tl-rank">${rankStr}</span></div><span class="card-rank-center">${rankStr}</span>`; }
+    return el;
+}
+
+document.getElementById('btn-clear').onclick = () => { if(window.isProcessingClient || myRole === 'spectator') return; selectedCards=[]; requestAnimationFrame(renderGame); };
+DOM.btnPass.onclick = () => { if(window.isProcessingClient || myRole === 'spectator') return; window.isProcessingClient = true; sendMsg({type:'ACTION', action:{type:'PASS'}}); selectedCards=[]; setTimeout(() => { window.isProcessingClient = false; }, 300); };
+DOM.btnPlay.onclick = () => { if(window.isProcessingClient || myRole === 'spectator') return; const m = clientState.players.find(p=>p.id===me.id); if(!m) return; const pC = m.hand.filter(c=>selectedCards.includes(c.id)); if(!validatePlay(pC, clientState)) return; window.isProcessingClient = true; sendMsg({type:'ACTION', action:{type:'PLAY', cardIds:selectedCards, bindSuits:pC.map(c=>c.s).filter(s=>s!=='JOKER')}}); selectedCards=[]; setTimeout(() => { window.isProcessingClient = false; }, 300); };
+
+function renderResult() {
+    UI.switchScreen('result'); const l = document.getElementById('result-list'); const frag = document.createDocumentFragment();
+    const isFinal = clientState.rules.totalRounds && clientState.rules.totalRounds !== 999 && clientState.round >= clientState.rules.totalRounds;
+
+    const mainTitle = document.createElement('h2'); mainTitle.innerText = isFinal ? `🌟 最終ゲーム結果 🌟` : `Round ${clientState.round} 結果`; mainTitle.style.cssText = "color: var(--accent); font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 2px; margin: 0 0 10px 0; text-align: center; text-shadow: 1px 1px 0 #000;"; frag.appendChild(mainTitle);
+
+    let playingPlayers = clientState.players.filter(p=>p.role!=='spectator' && p.status !== 'abandoned');
+
+    if(isFinal) {
+        [...playingPlayers].sort((a,b)=>b.score - a.score).forEach((p,i)=>{
+            const div = document.createElement('div'); let customStyle = "padding: 6px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 3px;";
+            if(i === 0) customStyle += " border: 2px solid #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1)); color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); transform: scale(1.05); margin: 8px 0;"; else customStyle += " border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff;";
+            div.style.cssText = customStyle;
+            div.innerHTML = `<div style="display:flex; align-items:center; gap:6px;"><span style="font-size: 16px;">${i===0?'🏆':i===1?'🥈':i===2?'🥉':'👤'}</span><div style="display:flex; flex-direction:column; line-height:1.1;"><span style="font-size:14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px;">${escapeHTML(p.name)}</span></div></div><div style="font-size: 16px; text-align:right; color: var(--accent);">${p.score} <span style="font-size:10px; color:#ccc;">pt</span></div>`;
+            frag.appendChild(div);
+        });
+    } else {
+        [...playingPlayers].sort((a,b)=>a.rank-b.rank).forEach((p,i)=>{ 
+            let t=""; if(p.status==='miyako') t=" <span style='font-size:10px; color:#ff7675; font-weight:900;'><br>(🏯 都落ち)</span>"; if(p.status==='penalized') t=` <span style='font-size:10px; color:#ff7675; font-weight:900;'><br>(❌ ${p.penReason || "反則"})</span>`; 
+            const div = document.createElement('div'); let customStyle = "padding: 6px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 3px;";
+            if(p.rank === 0) customStyle += " border: 1px solid #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05)); color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);"; else if(p.rank === 4) customStyle += " border: 1px dashed #7f8c8d; background: rgba(0,0,0,0.7); color: #95a5a6; filter: grayscale(50%);"; else customStyle += " border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff;";
+            div.style.cssText = customStyle;
+            let rankIcon = p.rank === 0 ? "👑" : (p.rank === 4 ? "💀" : "👤"); let pts = RANK_SCORES[p.rank] || 0; let ptsStr = pts > 0 ? `+${pts}` : pts; let ptsColor = pts > 0 ? '#2ecc71' : (pts < 0 ? '#e74c3c' : '#bdc3c7');
+            div.innerHTML = `<div style="display:flex; align-items:center; gap:6px;"><span style="font-size: 16px;">${rankIcon}</span><div style="display:flex; flex-direction:column; line-height:1.1;"><span style="font-size:13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px;">${escapeHTML(p.name)}</span>${t}</div></div><div style="display:flex; flex-direction:column; align-items:flex-end;"><div style="font-size: 14px;"><span style="font-size:10px; color:#ddd; margin-right:2px;">${i+1}位</span>${RANK_NAMES[p.rank]}</div><div style="font-size: 11px; color: ${ptsColor}; font-family: monospace;">Score: ${ptsStr}</div></div>`; 
+            frag.appendChild(div); 
+        });
+        if(clientState.gekokujo) { const div = document.createElement('div'); div.style.cssText = "color:var(--primary); font-size:16px; font-weight:900; text-align:center; margin: 4px 0; animation:pulseRed 1s infinite; text-shadow: 0 0 5px rgba(0,0,0,0.8);"; div.innerText = "🔥 下剋上発生！ 🔥"; frag.appendChild(div); }
+    }
+
+    if(clientState.history && clientState.history.length > 0) {
+        const histTitle = document.createElement('h3'); histTitle.innerText = "📊 総合スコア履歴"; histTitle.style.cssText = "color: #fff; font-size: 1rem; margin-top: 8px; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 2px; text-align: center; text-shadow: 1px 1px 0 #000;"; frag.appendChild(histTitle);
+        const tableContainer = document.createElement('div'); tableContainer.className = 'hist-table-container'; tableContainer.style.cssText = "width: 100%; overflow-x: auto; touch-action: pan-x; overscroll-behavior-x: contain; background: rgba(0,0,0,0.6); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);";
+        const table = document.createElement('table'); table.style.cssText = "width: 100%; border-collapse: collapse; font-size: 10px; text-align: center; color: #fff; white-space: nowrap;";
+        let thead = `<thead><tr style="background: rgba(255,255,255,0.15); border-bottom: 1px solid rgba(255,255,255,0.2);"><th style="padding: 4px; font-weight:900; position: sticky; left: 0; background: #2F3542; z-index: 2; border-right: 1px solid rgba(255,255,255,0.1);">プレイヤー</th>`;
+        clientState.history.forEach(h => { thead += `<th style="padding: 4px; font-weight:900;">R${h.round}</th>`; }); thead += `<th style="padding: 4px; font-weight:900; color:var(--accent);">Total</th></tr></thead>`; table.innerHTML = thead;
+        const tbody = document.createElement('tbody');
+        playingPlayers.forEach((p, idx) => {
+            const tr = document.createElement('tr'); tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+            let rowHtml = `<td style="padding: 4px; font-weight:bold; position: sticky; left: 0; background: ${idx%2===0?'#1e272e':'#2f3640'}; border-right: 1px solid rgba(255,255,255,0.1); max-width: 60px; overflow: hidden; text-overflow: ellipsis; z-index: 1;">${escapeHTML(p.name)}</td>`;
+            let total = 0;
+            clientState.history.forEach((h) => {
+                const res = h.results.find(r => r.id === p.id);
+                if(res) { let d = res.scoreDelta || 0; total += d; let c = d > 0 ? '#2ecc71' : (d < 0 ? '#e74c3c' : '#aaa'); let s = d > 0 ? `+${d}` : d; rowHtml += `<td style="padding: 4px; color:${c};">${s}</td>`; } else { rowHtml += `<td style="padding: 4px; color: #555;">-</td>`; }
+            });
+            rowHtml += `<td style="padding: 4px; font-weight:bold; color:var(--accent);">${total}</td>`; tr.innerHTML = rowHtml; tbody.appendChild(tr);
+        });
+        table.appendChild(tbody); tableContainer.appendChild(table); frag.appendChild(tableContainer);
+    }
+
+    l.innerHTML=''; l.appendChild(frag);
+
+    const b = document.getElementById('btn-next-round'); const e = document.getElementById('btn-end-game');
+    b.classList.remove('hidden'); e.classList.remove('hidden');
+    if(isFinal) { b.classList.add('hidden'); }
+    if(isHost) { 
+        b.innerText = "▶ 次のラウンドへ"; b.disabled = false; b.style.background = "var(--secondary)";
+        b.onclick = () => { 
+            hostState.round++; hostState.players = hostState.players.filter(p => !p.disconnected || p.status === 'abandoned'); fillCPUs(hostState);
+            if(hostState.players.filter(p=>p.role!=='spectator').length < 2) { showToast("人数不足のためロビーに戻ります。", true); hostState.phase = 'LOBBY'; broadcastState(); return; }
+            hostState.players.forEach(p => { 
+                if(p.status === 'abandoned') return;
+                if(p.role === 'spectator') { p.status = 'spectator'; p.hand = []; }
+                else { p.lastRank = p.rank; p.status = 'playing'; p.hand = []; p.timeBank = 0; p.turnTime = 60; p.isReady = true; p.finishOrder = -1; p.penReason = ""; }
+            });
+            hostState.finishCount = 0; hostState.gekokujo = false; hostState.interaction = null; hostState.exchange = null; hostState.isDelaying = false; hostState.lastAction = null; clearBoard(true); dealCards();
+            if(hostState.rules.cardExchange && !hostState.gekokujoTriggeredLastTime && hasExchangePairs(hostState.players)) { hostState.phase = 'EXCHANGE'; initExchange(); } else { hostState.gekokujoTriggeredLastTime = false; hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); }
+            startHostTimer();
+        }; 
+        e.innerText = "🛑 解散"; e.onclick = () => { window.leaveRoom(true); };
+    } else { 
+        b.innerText = "⏳ ホストを待機中..."; b.disabled = true; b.style.background = "#555"; e.innerText = "🚪 退室"; e.onclick = () => { window.leaveRoom(true); };
+    }
+}
+
+function toggleChat() {
+    isChatExpanded = !isChatExpanded; const expandedArea = document.getElementById('chat-expanded-area'), toggleBtn = document.getElementById('btn-chat-toggle'), badge = document.getElementById('chat-unread-badge');
+    if(isChatExpanded) { expandedArea.style.display = 'flex'; toggleBtn.innerText = '最小化'; toggleBtn.style.background = '#95a5a6'; chatUnreadCount = 0; badge.style.display = 'none'; setTimeout(()=>{const c=document.getElementById('chat-messages'); c.scrollTop=c.scrollHeight;}, 50); } 
+    else { expandedArea.style.display = 'none'; toggleBtn.innerText = '開く'; toggleBtn.style.background = 'var(--secondary)'; }
+}
+document.getElementById('chat-preview-bar').addEventListener('click', (e) => { if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' || e.target.id === 'btn-chat-toggle') toggleChat(); });
+function sendChatMessage() { const input = document.getElementById('chat-input-text'); const text = input.value.trim(); if(!text) return; sendMsg({ type: 'CHAT', text: text, sender: me.name, senderId: me.id, time: Date.now() }); input.value = ''; }
+document.getElementById('btn-chat-send').addEventListener('click', sendChatMessage); document.getElementById('chat-input-text').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+
+function appendChatMessage(msg) {
+    const mc = document.getElementById('chat-messages'); const isMe = msg.senderId === me.id; const isSystem = msg.senderId === 'system'; const div = document.createElement('div');
+    if (isSystem) { div.style.cssText = `text-align: center; margin: 4px 0;`; div.innerHTML = `<span style="background: rgba(255,255,255,0.2); color: #ddd; font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight:bold;">${escapeHTML(msg.text)}</span>`; } 
+    else { div.style.cssText = `display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 100%;`; div.innerHTML = `<span style="font-size: 10px; color: #aaa; margin-bottom: 2px; padding: 0 4px; font-weight:bold;">${isMe ? 'あなた' : msg.sender}</span><div style="background: ${isMe ? 'var(--primary)' : '#34495e'}; color: white; padding: 8px 12px; border-radius: 14px; font-size: 13px; font-weight:bold; word-break: break-word; max-width: 85%; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${escapeHTML(msg.text)}</div>`; }
+    mc.appendChild(div);
+    const pt = document.getElementById('chat-preview-text');
+    if (isSystem) pt.innerHTML = `<span style="color: #bbb; font-style: italic;">${escapeHTML(msg.text)}</span>`; else pt.innerHTML = `<span style="color:${isMe ? 'var(--primary)' : 'var(--secondary)'}; font-weight:bold;">${isMe ? 'あなた' : msg.sender}:</span> ${escapeHTML(msg.text)}`;
+    if(!isChatExpanded && !isMe) { chatUnreadCount++; const b = document.getElementById('chat-unread-badge'); b.innerText = chatUnreadCount; b.style.display = 'block'; } else { mc.scrollTop=mc.scrollHeight; }
+}
+function escapeHTML(str) { return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t)); }
+
+document.getElementById('btn-refresh-rooms').onclick=refreshRooms; document.getElementById('btn-create-room').onclick=createRoom;
+document.getElementById('btn-start-game').onclick=startHostGame;
+window.onload=initGame;
+</script>
+</body>
+</html>
