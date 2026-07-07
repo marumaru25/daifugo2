@@ -8,8 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" media="print" onload="this.media='all'">
 <style>
-
-
   :root {
     --bg: #f0f2f8;
     --surface: #ffffff;
@@ -20,35 +18,28 @@
     --text: #1a1a2e;
     --muted: #7c7c9a;
     --copied: #16a34a;
+    --fav: #f59e0b;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     background: linear-gradient(135deg, #e8ecf8 0%, #f5f0ff 50%, #eaf4ff 100%);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', 'Noto Sans JP', sans-serif;
     min-height: 100vh;
-    padding: 24px 16px 48px;
+    padding: 20px 16px 48px;
   }
-
   header { text-align: center; margin-bottom: 16px; }
   header h1 {
-    font-size: clamp(20px, 5vw, 32px);
-    font-weight: 700;
+    font-size: clamp(20px, 5vw, 28px); font-weight: 700;
     background: linear-gradient(135deg, var(--claude), var(--gemini));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  header p { color: var(--muted); font-size: 13px; margin-top: 6px; }
 
   /* タブ */
-  .tabs {
-    display: flex; gap: 8px; margin-bottom: 16px;
-    overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;
-  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
   .tabs::-webkit-scrollbar { display: none; }
   .tab {
-    flex-shrink: 0; padding: 8px 16px; border-radius: 999px;
+    flex-shrink: 0; padding: 7px 14px; border-radius: 999px;
     border: 1px solid var(--border); background: transparent;
     color: var(--muted); font-family: inherit; font-size: 12px; cursor: pointer; transition: all 0.2s;
   }
@@ -57,56 +48,77 @@
   .tab.active-phrases { border-color: var(--gemini);  color: var(--gemini);  background: rgba(79,70,229,0.1); }
   .tab.active-skills  { border-color: #db2777; color: #db2777; background: rgba(219,39,119,0.1); }
   .tab.active-mode    { border-color: #0891b2; color: #0891b2; background: rgba(8,145,178,0.1); }
+  .tab.active-fav     { border-color: var(--fav); color: var(--fav); background: rgba(245,158,11,0.1); }
+  .tab.active-auto    { border-color: #8b5cf6; color: #8b5cf6; background: rgba(139,92,246,0.1); }
+
+  /* 自動化ツールカード */
+  .tool-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .tool-card::before { display: none; }
+  .tool-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .tool-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .badge-claude  { background: rgba(194,97,10,0.15); color: var(--claude); }
+  .badge-chatgpt { background: rgba(5,150,105,0.15); color: var(--chatgpt); }
+  .badge-gemini  { background: rgba(79,70,229,0.15); color: var(--gemini); }
+  .badge-all     { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+  .tool-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .tool-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+  .tool-link {
+    display: inline-block; font-size: 11px; padding: 6px 14px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); text-decoration: none;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .tool-link:hover { background: #f1f5f9; }
+  .tool-url {
+    font-size: 10px; color: var(--muted); margin-top: 6px;
+    word-break: break-all; line-height: 1.5;
+  }
+  .tool-copy-url {
+    display: inline-block; font-size: 10px; padding: 3px 10px;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    font-family: inherit; margin-left: 6px;
+  }
 
   /* タグフィルター */
-  .tag-filter {
-    display: flex; gap: 6px; flex-wrap: nowrap; margin-bottom: 16px;
-    overflow-x: auto; overflow-y: hidden;
-    scrollbar-width: none; padding-bottom: 4px;
-  }
+  .tag-filter { display: flex; gap: 6px; flex-wrap: nowrap; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
   .tag-filter::-webkit-scrollbar { display: none; }
-  .tag-btn { flex-shrink: 0; }
   .tag-btn {
     flex-shrink: 0; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border);
     background: var(--surface); color: var(--muted); font-size: 11px;
     cursor: pointer; transition: all 0.15s; font-family: inherit;
   }
-  .tag-btn:hover { opacity: 0.8; }
-  .tag-btn.active {
-    border-color: transparent; color: #fff; font-weight: 700;
-  }
-  .tag-btn[data-tag="✍️文章・ライティング"].active { background: #6366f1; border-color: #6366f1; }
-  .tag-btn[data-tag="🧠分析・思考"].active          { background: #dc2626; border-color: #dc2626; }
-  .tag-btn[data-tag="📝要約・整理"].active           { background: #0891b2; border-color: #0891b2; }
-  .tag-btn[data-tag="💡アイデア出し"].active         { background: #d97706; border-color: #d97706; }
-  .tag-btn[data-tag="📖説明・教育"].active           { background: #059669; border-color: #059669; }
-  .tag-btn[data-tag="🎨制作・生成・ゲーム"].active  { background: #7c3aed; border-color: #7c3aed; }
-  .tag-btn[data-tag="📊マーケ・ビジネス"].active     { background: #b45309; border-color: #b45309; }
-  .tag-btn[data-tag="💻コード"].active               { background: #374151; border-color: #374151; }
-  .tag-btn[data-tag="⚙️設定・モード"].active         { background: #475569; border-color: #475569; }
+  .tag-btn.active { border-color: transparent; color: #fff; font-weight: 700; }
+  .tag-btn[data-tag="✍️文章・ライティング"].active { background: #6366f1; }
+  .tag-btn[data-tag="🧠分析・思考"].active          { background: #dc2626; }
+  .tag-btn[data-tag="📝要約・整理"].active           { background: #0891b2; }
+  .tag-btn[data-tag="💡アイデア出し"].active         { background: #d97706; }
+  .tag-btn[data-tag="📖説明・教育"].active           { background: #059669; }
+  .tag-btn[data-tag="🎨制作・生成・ゲーム"].active   { background: #7c3aed; }
+  .tag-btn[data-tag="📊マーケ・ビジネス"].active     { background: #b45309; }
+  .tag-btn[data-tag="💻コード"].active               { background: #374151; }
+  .tag-btn[data-tag="⚙️設定・モード"].active         { background: #475569; }
 
-  /* カードタグ */
-  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-  .ctag {
-    font-size: 10px; padding: 1px 7px; border-radius: 999px;
-    background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;
-  }
-
+  /* カード */
   .section { display: none; }
   .section.active { display: block; }
   .card.hidden { display: none; }
-
-  .group-label {
-    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--muted); margin: 20px 0 10px;
-  }
+  .group-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
 
   .card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 12px; padding: 10px 14px; margin-bottom: 8px;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 10px;
+    position: relative; overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    cursor: pointer;
   }
   .card::before {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0;
@@ -116,24 +128,70 @@
   .chatgpt-card::before { background: var(--chatgpt); }
   .phrases-card::before { background: var(--gemini); }
   .skills-card::before  { background: #db2777; }
-  .card:active { transform: scale(0.98); opacity: 0.8; }
 
   .card-left { flex: 1; min-width: 0; }
   .cmd { font-size: 14px; font-weight: 700; color: var(--text); }
-  .effect { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
-
-  .pos-preview { display: flex; align-items: center; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
+  .effect { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .ctag { font-size: 10px; padding: 1px 7px; border-radius: 999px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+  .pos-preview { display: flex; align-items: center; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
   .pos-box { padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
   .pos-text { color: var(--muted); font-size: 11px; }
 
-  .copy-btn {
-    flex-shrink: 0; width: 36px; height: 36px; border-radius: 8px;
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
+  .card-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+  .copy-btn, .fav-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 1px solid var(--border); background: transparent;
     display: flex; align-items: center; justify-content: center;
     font-size: 16px; transition: all 0.15s; cursor: pointer;
   }
   .card.copied .copy-btn { border-color: var(--copied); color: var(--copied); background: rgba(22,163,74,0.1); }
+  .fav-btn { color: var(--muted); }
+  .fav-btn.active { border-color: var(--fav); color: var(--fav); background: rgba(245,158,11,0.1); }
 
+  /* ポップアップ */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: flex-end; justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .popup {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 24px 20px 40px; width: 100%; max-width: 600px;
+    max-height: 80vh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .popup-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0 auto 20px; }
+  .popup-cmd { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .popup-reading { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .popup-effect { font-size: 14px; color: var(--text); margin-bottom: 20px; line-height: 1.6; }
+  .popup-section-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  .popup-usage {
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 16px;
+  }
+  .popup-usage p { font-size: 13px; line-height: 1.8; color: var(--text); }
+  .popup-usage .example {
+    background: #fff; border: 1px solid #e0f2fe; border-radius: 8px;
+    padding: 10px 14px; margin-top: 10px; font-size: 13px;
+    color: #0369a1; line-height: 1.7;
+  }
+  .popup-pos { display: flex; align-items: center; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+  .popup-copy-btn {
+    width: 100%; padding: 14px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--claude), var(--gemini));
+    border: none; color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+
+  /* お気に入りセクション */
+  .empty-fav { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 14px; }
+  .empty-fav .icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* トースト */
   .toast {
     position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%) translateY(80px);
@@ -144,258 +202,303 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  .note {
-    margin-top: 32px; padding: 12px 16px;
-    border: 1px dashed var(--border); border-radius: 8px;
-    font-size: 11px; color: var(--muted); line-height: 1.6;
+
+  .pos-inline {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+    vertical-align: middle;
   }
+  .pos-inline-before { background: #dbeafe; color: #1d4ed8; }
+  .pos-inline-after  { background: #fef9c3; color: #92400e; }
+  .note { margin-top: 32px; padding: 12px 16px; border: 1px dashed var(--border); border-radius: 8px; font-size: 11px; color: var(--muted); line-height: 1.6; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>AI コマンド帳</h1>
-</header>
+<header><h1>AI コマンド帳</h1></header>
 
 <div class="tabs">
-  <button class="tab active-claude"  onclick="showSection('claude', this)">Claude</button>
+  <button class="tab active-fav" onclick="showSection('fav', this)">⭐ お気に入り</button>
+  <button class="tab" onclick="showSection('claude', this)">Claude</button>
   <button class="tab" onclick="showSection('chatgpt', this)">ChatGPT / Gemini</button>
   <button class="tab" onclick="showSection('phrases', this)">日本語フレーズ</button>
   <button class="tab" onclick="showSection('skills', this)">スキル名</button>
   <button class="tab" onclick="showSection('mode', this)">モード選び</button>
+  <button class="tab" onclick="showSection('auto', this)">🤖 自動化ツール</button>
 </div>
 
 <div class="tag-filter" id="tagFilter">
   <button class="tag-btn" data-tag="all" onclick="filterTag('all',this)">すべて</button>
-  <button class="tag-btn" data-tag="✍️文章・ライティング" onclick="filterTag('✍️文章・ライティング',this)">✍️文章</button>
-  <button class="tag-btn" data-tag="🧠分析・思考" onclick="filterTag('🧠分析・思考',this)">🧠分析</button>
-  <button class="tag-btn" data-tag="📝要約・整理" onclick="filterTag('📝要約・整理',this)">📝要約</button>
-  <button class="tag-btn" data-tag="💡アイデア出し" onclick="filterTag('💡アイデア出し',this)">💡アイデア</button>
-  <button class="tag-btn" data-tag="📖説明・教育" onclick="filterTag('📖説明・教育',this)">📖説明</button>
-  <button class="tag-btn" data-tag="🎨制作・生成・ゲーム" onclick="filterTag('🎨制作・生成・ゲーム',this)">🎨制作・ゲーム</button>
-  <button class="tag-btn" data-tag="📊マーケ・ビジネス" onclick="filterTag('📊マーケ・ビジネス',this)">📊マーケ</button>
-  <button class="tag-btn" data-tag="💻コード" onclick="filterTag('💻コード',this)">💻コード</button>
-  <button class="tag-btn" data-tag="⚙️設定・モード" onclick="filterTag('⚙️設定・モード',this)">⚙️設定</button>
+  <button class="tag-btn" data-tag="✍️文章・ライティング" onclick="filterTag('✍️文章・ライティング',this)">✍️ 文章</button>
+  <button class="tag-btn" data-tag="🧠分析・思考" onclick="filterTag('🧠分析・思考',this)">🧠 分析・思考</button>
+  <button class="tag-btn" data-tag="📝要約・整理" onclick="filterTag('📝要約・整理',this)">📝 要約・整理</button>
+  <button class="tag-btn" data-tag="💡アイデア出し" onclick="filterTag('💡アイデア出し',this)">💡 アイデア</button>
+  <button class="tag-btn" data-tag="📖説明・教育" onclick="filterTag('📖説明・教育',this)">📖 説明・教育</button>
+  <button class="tag-btn" data-tag="🎨制作・生成・ゲーム" onclick="filterTag('🎨制作・生成・ゲーム',this)">🎨 制作・生成・ゲーム</button>
+  <button class="tag-btn" data-tag="📊マーケ・ビジネス" onclick="filterTag('📊マーケ・ビジネス',this)">📊 マーケ・ビジネス</button>
+  <button class="tag-btn" data-tag="💻コード" onclick="filterTag('💻コード',this)">💻 コード</button>
+  <button class="tag-btn" data-tag="⚙️設定・モード" onclick="filterTag('⚙️設定・モード',this)">⚙️ 設定・モード</button>
 </div>
 
 <!-- Claude -->
-<div class="section active" id="section-claude">
+<div class="section" id="section-claude">
   <div class="group-label">基本コマンド</div>
-
-  <div class="card claude-card" data-tags="✍️文章・ライティング" onclick="copyCmd(this,'/formal')">
+  <div class="card claude-card" data-tags="✍️文章・ライティング" data-id="formal" onclick="openPopup('formal')">
     <div class="card-left">
-      <div class="cmd">/formal</div>
+      <div class="cmd">/formal<span class="pos-inline pos-inline-after">後につける</span></div>
       <div class="effect">一瞬で完璧なビジネス敬語に変換</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">/formal</span></div>
-      <div class="card-tags"><span class="ctag">✍️文章</span></div>
+      <div class="card-tags"><span class="ctag">✍️ 文章</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/formal')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('formal',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="🧠分析・思考" onclick="copyCmd(this,'/logic')">
+  <div class="card claude-card" data-tags="🧠分析・思考" data-id="logic" onclick="openPopup('logic')">
     <div class="card-left">
-      <div class="cmd">/logic</div>
+      <div class="cmd">/logic<span class="pos-inline pos-inline-after">後につける</span></div>
       <div class="effect">コンサル級の論理分析をしてくれる</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">/logic</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/logic')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('logic',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="📝要約・整理" onclick="copyCmd(this,'/todo')">
+  <div class="card claude-card" data-tags="📝要約・整理" data-id="todo" onclick="openPopup('todo')">
     <div class="card-left">
-      <div class="cmd">/todo</div>
+      <div class="cmd">/todo<span class="pos-inline pos-inline-after">後につける</span></div>
       <div class="effect">議事録からタスクを爆速抽出</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">/todo</span></div>
-      <div class="card-tags"><span class="ctag">📝要約</span></div>
+      <div class="card-tags"><span class="ctag">📝 要約・整理</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/todo')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('todo',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="📝要約・整理" onclick="copyCmd(this,'/boss')">
+  <div class="card claude-card" data-tags="📝要約・整理" data-id="boss" onclick="openPopup('boss')">
     <div class="card-left">
-      <div class="cmd">/boss</div>
+      <div class="cmd">/boss<span class="pos-inline pos-inline-after">後につける</span></div>
       <div class="effect">鬼上司の視点で資料を厳しく添削</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">/boss</span></div>
-      <div class="card-tags"><span class="ctag">📝要約</span></div>
+      <div class="card-tags"><span class="ctag">📝 要約・整理</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/boss')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('boss',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="📝要約・整理" onclick="copyCmd(this,'/1page')">
+  <div class="card claude-card" data-tags="📝要約・整理" data-id="1page" onclick="openPopup('1page')">
     <div class="card-left">
-      <div class="cmd">/1page</div>
+      <div class="cmd">/1page<span class="pos-inline pos-inline-after">後につける</span></div>
       <div class="effect">長文を1分で読める要約に圧縮</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">/1page</span></div>
-      <div class="card-tags"><span class="ctag">📝要約</span></div>
+      <div class="card-tags"><span class="ctag">📝 要約・整理</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/1page')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('1page',this)">☆</button>
+    </div>
   </div>
 
   <div class="group-label">自動化コマンド</div>
 
-  <div class="card claude-card" data-tags="📊マーケ・ビジネス" onclick="copyCmd(this,'/goal')">
+  <div class="card claude-card" data-tags="📊マーケ・ビジネス" data-id="goal" onclick="openPopup('goal')">
     <div class="card-left">
-      <div class="cmd">/goal</div>
+      <div class="cmd">/goal<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">指定したゴールまで自律的にやり切る</div>
-      <div class="pos-preview"><span class="pos-box">/goal</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📊マーケ</span></div>
+      <div class="card-tags"><span class="ctag">📊 マーケ・ビジネス</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/goal')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('goal',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="📊マーケ・ビジネス" onclick="copyCmd(this,'/loop')">
+  <div class="card claude-card" data-tags="📊マーケ・ビジネス" data-id="loop" onclick="openPopup('loop')">
     <div class="card-left">
-      <div class="cmd">/loop</div>
+      <div class="cmd">/loop<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">一定時間ごとに同じ作業を繰り返す</div>
-      <div class="pos-preview"><span class="pos-box">/loop</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📊マーケ</span></div>
+      <div class="card-tags"><span class="ctag">📊 マーケ・ビジネス</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/loop')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('loop',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="📊マーケ・ビジネス" onclick="copyCmd(this,'/schedule')">
+  <div class="card claude-card" data-tags="📊マーケ・ビジネス" data-id="schedule" onclick="openPopup('schedule')">
     <div class="card-left">
-      <div class="cmd">/schedule</div>
+      <div class="cmd">/schedule<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">指定時刻に自動起動する</div>
-      <div class="pos-preview"><span class="pos-box">/schedule</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📊マーケ</span></div>
+      <div class="card-tags"><span class="ctag">📊 マーケ・ビジネス</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/schedule')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('schedule',this)">☆</button>
+    </div>
   </div>
 
   <div class="group-label">その他コマンド</div>
 
-  <div class="card claude-card" data-tags="✍️文章・ライティング ⚙️設定・モード" onclick="copyCmd(this,'/ghost')">
+  <div class="card claude-card" data-tags="✍️文章・ライティング ⚙️設定・モード" data-id="ghost" onclick="openPopup('ghost')">
     <div class="card-left">
       <div class="cmd">/ghost <span style="font-size:11px;opacity:0.5">ゴースト</span></div>
       <div class="effect">AIっぽさを消して自然な文章で回答する</div>
-      <div class="pos-preview"><span class="pos-box">/ghost</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">✍️文章</span><span class="ctag">⚙️設定</span></div>
+      <div class="card-tags"><span class="ctag">✍️ 文章</span><span class="ctag">⚙️ 設定</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/ghost')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('ghost',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="🎨制作・生成・ゲーム" onclick="copyCmd(this,'ARTIFACTS')">
+  <div class="card claude-card" data-tags="🎨制作・生成・ゲーム" data-id="artifacts" onclick="openPopup('artifacts')">
     <div class="card-left">
       <div class="cmd">ARTIFACTS <span style="font-size:11px;opacity:0.5">アーティファクト</span></div>
       <div class="effect">アプリ・ゲーム・ダッシュボードなどをプロンプトで直接生成する</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">ARTIFACTS</span></div>
-      <div class="card-tags"><span class="ctag">🎨制作・ゲーム</span></div>
+      <div class="card-tags"><span class="ctag">🎨 制作・生成・ゲーム</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'ARTIFACTS')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('artifacts',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="🧠分析・思考" onclick="copyCmd(this,'OODA')">
+  <div class="card claude-card" data-tags="🧠分析・思考" data-id="ooda" onclick="openPopup('ooda')">
     <div class="card-left">
       <div class="cmd">OODA <span style="font-size:11px;opacity:0.5">ウーダ</span></div>
-      <div class="effect">軍事由来の意思決定フレームワーク（観察→判断→決定→行動）で問題を分析し回答する</div>
-      <div class="pos-preview"><span class="pos-box">OODA</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="effect">軍事由来の意思決定フレームワークで問題を分析し回答する</div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'OODA')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('ooda',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="🧠分析・思考" onclick="copyCmd(this,'L99')">
+  <div class="card claude-card" data-tags="🧠分析・思考" data-id="l99" onclick="openPopup('l99')">
     <div class="card-left">
       <div class="cmd">L99 <span style="font-size:11px;opacity:0.5">エルきゅうじゅうきゅう</span></div>
       <div class="effect">最も高度で専門的なレベルの回答を引き出す</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">L99</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'L99')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('l99',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="⚙️設定・モード" onclick="copyCmd(this,'/godmode')">
+  <div class="card claude-card" data-tags="⚙️設定・モード" data-id="godmode" onclick="openPopup('godmode')">
     <div class="card-left">
       <div class="cmd">/godmode <span style="font-size:11px;opacity:0.5">ゴッドモード</span></div>
-      <div class="effect">積極的かつ包括的な回答スタイルを解放し、制限なしで回答させる</div>
-      <div class="pos-preview"><span class="pos-box">/godmode</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">⚙️設定</span></div>
+      <div class="effect">積極的かつ包括的な回答スタイルで制限なしで回答させる</div>
+      <div class="card-tags"><span class="ctag">⚙️ 設定</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/godmode')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('godmode',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="💡アイデア出し" onclick="copyCmd(this,'/BRAINS')">
+  <div class="card claude-card" data-tags="💡アイデア出し" data-id="brains" onclick="openPopup('brains')">
     <div class="card-left">
       <div class="cmd">/BRAINS <span style="font-size:11px;opacity:0.5">ブレインズ</span></div>
       <div class="effect">アイデアをあらゆる角度から広げてくれる</div>
-      <div class="pos-preview"><span class="pos-box">/BRAINS</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💡アイデア</span></div>
+      <div class="card-tags"><span class="ctag">💡 アイデア</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/BRAINS')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('brains',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="✍️文章・ライティング ⚙️設定・モード" onclick="copyCmd(this,'/VOICE')">
+  <div class="card claude-card" data-tags="✍️文章・ライティング ⚙️設定・モード" data-id="voice" onclick="openPopup('voice')">
     <div class="card-left">
       <div class="cmd">/VOICE <span style="font-size:11px;opacity:0.5">ボイス</span></div>
-      <div class="effect">過去の文章から語尾・温度感・文体を分析し、自分だけの文体を定義してくれる</div>
-      <div class="pos-preview"><span class="pos-box">/VOICE</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">✍️文章</span><span class="ctag">⚙️設定</span></div>
+      <div class="effect">過去の文章から自分だけの文体を定義してくれる</div>
+      <div class="card-tags"><span class="ctag">✍️ 文章</span><span class="ctag">⚙️ 設定</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/VOICE')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('voice',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="💡アイデア出し" onclick="copyCmd(this,'/brainstorm')">
+  <div class="card claude-card" data-tags="💡アイデア出し" data-id="brainstorm" onclick="openPopup('brainstorm')">
     <div class="card-left">
       <div class="cmd">/brainstorm <span style="font-size:11px;opacity:0.5">ブレインストーム</span></div>
-      <div class="effect">テーマについてアイデアを広げてブレインストーミングしてくれる</div>
-      <div class="pos-preview"><span class="pos-box">/brainstorm</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💡アイデア</span></div>
+      <div class="effect">テーマについてアイデアを広げてくれる</div>
+      <div class="card-tags"><span class="ctag">💡 アイデア</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/brainstorm')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('brainstorm',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="🧠分析・思考" onclick="copyCmd(this,&quot;devil's advocate&quot;)">
+  <div class="card claude-card" data-tags="🧠分析・思考" data-id="devils" onclick="openPopup('devils')">
     <div class="card-left">
       <div class="cmd">devil's advocate <span style="font-size:11px;opacity:0.5">デビルズアドボケート</span></div>
       <div class="effect">自分の考えや主張の弱点・反論を指摘してくれる</div>
-      <div class="pos-preview"><span class="pos-box">devil's advocate</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),&quot;devil's advocate&quot;)">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('devils',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="📖説明・教育" onclick="copyCmd(this,'ELI5')">
+  <div class="card claude-card" data-tags="📖説明・教育" data-id="eli5" onclick="openPopup('eli5')">
     <div class="card-left">
       <div class="cmd">ELI5 <span style="font-size:11px;opacity:0.5">イーエルアイファイブ</span></div>
       <div class="effect">専門知識ゼロの人でもわかるようにやさしく説明してくれる</div>
-      <div class="pos-preview"><span class="pos-box">ELI5</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📖説明</span></div>
+      <div class="card-tags"><span class="ctag">📖 説明・教育</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'ELI5')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('eli5',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="📖説明・教育 📝要約・整理" onclick="copyCmd(this,'step by step')">
+  <div class="card claude-card" data-tags="📖説明・教育 📝要約・整理" data-id="stepbystep" onclick="openPopup('stepbystep')">
     <div class="card-left">
       <div class="cmd">step by step <span style="font-size:11px;opacity:0.5">ステップバイステップ</span></div>
       <div class="effect">手順を一個ずつ順番に丁寧に説明してくれる</div>
-      <div class="pos-preview"><span class="pos-text">質問・指示 →</span><span class="pos-box">step by step</span></div>
-      <div class="card-tags"><span class="ctag">📖説明</span><span class="ctag">📝要約</span></div>
+      <div class="card-tags"><span class="ctag">📖 説明</span><span class="ctag">📝 要約</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'step by step')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('stepbystep',this)">☆</button>
+    </div>
   </div>
 
   <div class="group-label">コード系</div>
 
-  <div class="card claude-card" data-tags="💻コード" onclick="copyCmd(this,'code-review')">
+  <div class="card claude-card" data-tags="💻コード" data-id="codereview" onclick="openPopup('codereview')">
     <div class="card-left">
-      <div class="cmd">code-review</div>
+      <div class="cmd">code-review<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">コードのレビューと改善案を出してくれる</div>
-      <div class="pos-preview"><span class="pos-box">code-review</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💻コード</span></div>
+      <div class="card-tags"><span class="ctag">💻 コード</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'code-review')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('codereview',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="💻コード" onclick="copyCmd(this,'Context Engineering')">
+  <div class="card claude-card" data-tags="💻コード" data-id="contexteng" onclick="openPopup('contexteng')">
     <div class="card-left">
-      <div class="cmd">Context Engineering</div>
+      <div class="cmd">Context Engineering<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">トークン消費を抑えてコスト・速度を最適化（Claude専用）</div>
-      <div class="pos-preview"><span class="pos-box">Context Engineering</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💻コード</span></div>
+      <div class="card-tags"><span class="ctag">💻 コード</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'Context Engineering')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('contexteng',this)">☆</button>
+    </div>
   </div>
 </div>
 
@@ -403,118 +506,140 @@
 <div class="section" id="section-chatgpt">
   <div class="group-label">共通コマンド</div>
 
-  <div class="card chatgpt-card" data-tags="⚙️設定・モード" onclick="copyCmd(this,'/human')">
+  <div class="card chatgpt-card" data-tags="⚙️設定・モード" data-id="human" onclick="openPopup('human')">
     <div class="card-left">
-      <div class="cmd">/human</div>
+      <div class="cmd">/human<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">自然で人間らしい口調の回答に変える</div>
-      <div class="pos-preview"><span class="pos-box">/human</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">⚙️設定</span></div>
+      <div class="card-tags"><span class="ctag">⚙️ 設定</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/human')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('human',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="📖説明・教育" onclick="copyCmd(this,'/EL10')">
+  <div class="card chatgpt-card" data-tags="📖説明・教育" data-id="el10" onclick="openPopup('el10')">
     <div class="card-left">
-      <div class="cmd">/EL10</div>
+      <div class="cmd">/EL10<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">子どもでもわかるやさしい言葉で説明</div>
-      <div class="pos-preview"><span class="pos-box">/EL10</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📖説明</span></div>
+      <div class="card-tags"><span class="ctag">📖 説明</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/EL10')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('el10',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="🧠分析・思考" onclick="copyCmd(this,'/X10THINK')">
+  <div class="card chatgpt-card" data-tags="🧠分析・思考" data-id="x10think" onclick="openPopup('x10think')">
     <div class="card-left">
-      <div class="cmd">/X10THINK</div>
+      <div class="cmd">/X10THINK<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">即答せず深く考えてから答えてくれる</div>
-      <div class="pos-preview"><span class="pos-box">/X10THINK</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/X10THINK')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('x10think',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="🧠分析・思考" onclick="copyCmd(this,'/KILLCRITIC')">
+  <div class="card chatgpt-card" data-tags="🧠分析・思考" data-id="killcritic" onclick="openPopup('killcritic')">
     <div class="card-left">
-      <div class="cmd">/KILLCRITIC</div>
+      <div class="cmd">/KILLCRITIC<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">忖度をやめて事実だけを話してくれる</div>
-      <div class="pos-preview"><span class="pos-box">/KILLCRITIC</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/KILLCRITIC')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('killcritic',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="💡アイデア出し" onclick="copyCmd(this,'/ALT3')">
+  <div class="card chatgpt-card" data-tags="💡アイデア出し" data-id="alt3" onclick="openPopup('alt3')">
     <div class="card-left">
-      <div class="cmd">/ALT3</div>
+      <div class="cmd">/ALT3<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">3パターンの異なる回答を同時に提示</div>
-      <div class="pos-preview"><span class="pos-box">/ALT3</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💡アイデア</span></div>
+      <div class="card-tags"><span class="ctag">💡 アイデア</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/ALT3')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('alt3',this)">☆</button>
+    </div>
   </div>
 
   <div class="group-label">ChatGPT専用コマンド</div>
 
-  <div class="card chatgpt-card" data-tags="✍️文章・ライティング" onclick="copyCmd(this,'/style')">
+  <div class="card chatgpt-card" data-tags="✍️文章・ライティング" data-id="style" onclick="openPopup('style')">
     <div class="card-left">
-      <div class="cmd">/style</div>
+      <div class="cmd">/style<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">AIっぽさを消して自然な文章にする</div>
-      <div class="pos-preview"><span class="pos-box">/style</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">✍️文章</span></div>
+      <div class="card-tags"><span class="ctag">✍️ 文章</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/style')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('style',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="🧠分析・思考" onclick="copyCmd(this,'/perspective')">
+  <div class="card chatgpt-card" data-tags="🧠分析・思考" data-id="perspective" onclick="openPopup('perspective')">
     <div class="card-left">
-      <div class="cmd">/perspective</div>
+      <div class="cmd">/perspective<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">専門家の視点で適切・正確に答える</div>
-      <div class="pos-preview"><span class="pos-box">/perspective</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/perspective')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('perspective',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="📝要約・整理" onclick="copyCmd(this,'/short')">
+  <div class="card chatgpt-card" data-tags="📝要約・整理" data-id="short" onclick="openPopup('short')">
     <div class="card-left">
-      <div class="cmd">/short</div>
+      <div class="cmd">/short<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">長い回答を2〜3行に要約</div>
-      <div class="pos-preview"><span class="pos-box">/short</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📝要約</span></div>
+      <div class="card-tags"><span class="ctag">📝 要約</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/short')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('short',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="✍️文章・ライティング 📝要約・整理" onclick="copyCmd(this,'/format')">
+  <div class="card chatgpt-card" data-tags="✍️文章・ライティング 📝要約・整理" data-id="format" onclick="openPopup('format')">
     <div class="card-left">
-      <div class="cmd">/format</div>
+      <div class="cmd">/format<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">文章を整えて圧倒的に読みやすくする</div>
-      <div class="pos-preview"><span class="pos-box">/format</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">✍️文章</span><span class="ctag">📝要約</span></div>
+      <div class="card-tags"><span class="ctag">✍️ 文章</span><span class="ctag">📝 要約</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/format')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('format',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card chatgpt-card" data-tags="📊マーケ・ビジネス" onclick="copyCmd(this,'/task')">
+  <div class="card chatgpt-card" data-tags="📊マーケ・ビジネス" data-id="task" onclick="openPopup('task')">
     <div class="card-left">
-      <div class="cmd">/task</div>
+      <div class="cmd">/task<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">やるべき手順を具体的にスケジュール化</div>
-      <div class="pos-preview"><span class="pos-box">/task</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📊マーケ</span></div>
+      <div class="card-tags"><span class="ctag">📊 マーケ</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/task')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('task',this)">☆</button>
+    </div>
   </div>
 
   <div class="group-label">コード系</div>
 
-  <div class="card chatgpt-card" data-tags="💻コード" onclick="copyCmd(this,'code-review')">
+  <div class="card chatgpt-card" data-tags="💻コード" data-id="codereview2" onclick="openPopup('codereview')">
     <div class="card-left">
-      <div class="cmd">code-review</div>
+      <div class="cmd">code-review<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">コードのレビューと改善案を出してくれる</div>
-      <div class="pos-preview"><span class="pos-box">code-review</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💻コード</span></div>
+      <div class="card-tags"><span class="ctag">💻 コード</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'code-review')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('codereview',this)">☆</button>
+    </div>
   </div>
 </div>
 
@@ -522,34 +647,40 @@
 <div class="section" id="section-phrases">
   <div class="group-label">そのままコピーして使える</div>
 
-  <div class="card phrases-card" data-tags="📝要約・整理" onclick="copyCmd(this,'前置きなしで答えて')">
+  <div class="card phrases-card" data-tags="📝要約・整理" data-id="maekiNashi" onclick="openPopup('maekiNashi')">
     <div class="card-left">
-      <div class="cmd">前置きなしで答えて</div>
+      <div class="cmd">前置きなしで答えて<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">余計な前置きを省いて結論から即答</div>
-      <div class="pos-preview"><span class="pos-box">前置きなしで答えて</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📝要約</span></div>
+      <div class="card-tags"><span class="ctag">📝 要約</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'前置きなしで答えて')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('maekiNashi',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card phrases-card" data-tags="🧠分析・思考" onclick="copyCmd(this,'忖度なしで正直に答えて')">
+  <div class="card phrases-card" data-tags="🧠分析・思考" data-id="sontaku" onclick="openPopup('sontaku')">
     <div class="card-left">
-      <div class="cmd">忖度なしで正直に答えて</div>
+      <div class="cmd">忖度なしで正直に答えて<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">お世辞をやめて本音・厳しい意見を言う</div>
-      <div class="pos-preview"><span class="pos-box">忖度なしで正直に答えて</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🧠分析</span></div>
+      <div class="card-tags"><span class="ctag">🧠 分析・思考</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'忖度なしで正直に答えて')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('sontaku',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card phrases-card" data-tags="⚙️設定・モード" onclick="copyCmd(this,'さっきまでの流れをリセットして答えて')">
+  <div class="card phrases-card" data-tags="⚙️設定・モード" data-id="reset" onclick="openPopup('reset')">
     <div class="card-left">
-      <div class="cmd">さっきまでの流れをリセットして答えて</div>
+      <div class="cmd">さっきまでの流れをリセットして答えて<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">長い会話の文脈をリセットして精度を回復</div>
-      <div class="pos-preview"><span class="pos-box">さっきまでの流れをリセットして答えて</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">⚙️設定</span></div>
+      <div class="card-tags"><span class="ctag">⚙️ 設定</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'さっきまでの流れをリセットして答えて')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('reset',this)">☆</button>
+    </div>
   </div>
 </div>
 
@@ -557,94 +688,88 @@
 <div class="section" id="section-skills">
   <div class="group-label">スキル名（Claudeに貼り付けて使う）</div>
 
-  <div class="card skills-card" data-tags="📊マーケ・ビジネス" onclick="copyCmd(this,'Marketing skills')">
+  <div class="card skills-card" data-tags="📊マーケ・ビジネス" data-id="marketing" onclick="openPopup('marketing')">
     <div class="card-left">
-      <div class="cmd">Marketing skills</div>
+      <div class="cmd">Marketing skills<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">マーケティング作業を23種のエージェントが代行</div>
-      <div class="pos-preview"><span class="pos-box">Marketing skills</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📊マーケ</span></div>
+      <div class="card-tags"><span class="ctag">📊 マーケ</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'Marketing skills')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('marketing',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card skills-card" data-tags="✍️文章・ライティング" onclick="copyCmd(this,'Stop Slop')">
+  <div class="card skills-card" data-tags="✍️文章・ライティング" data-id="stopslop" onclick="openPopup('stopslop')">
     <div class="card-left">
-      <div class="cmd">Stop Slop</div>
+      <div class="cmd">Stop Slop<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">AIっぽい硬い文章を自然な文体に変換</div>
-      <div class="pos-preview"><span class="pos-box">Stop Slop</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">✍️文章</span></div>
+      <div class="card-tags"><span class="ctag">✍️ 文章</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'Stop Slop')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('stopslop',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card skills-card" data-tags="🎨制作・生成・ゲーム" onclick="copyCmd(this,'UI UX Pro Max')">
+  <div class="card skills-card" data-tags="🎨制作・生成・ゲーム" data-id="uiux" onclick="openPopup('uiux')">
     <div class="card-left">
-      <div class="cmd">UI UX Pro Max</div>
+      <div class="cmd">UI UX Pro Max<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">プロ品質のUI/UXデザインを生成</div>
-      <div class="pos-preview"><span class="pos-box">UI UX Pro Max</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🎨制作・ゲーム</span></div>
+      <div class="card-tags"><span class="ctag">🎨 制作・生成・ゲーム</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'UI UX Pro Max')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('uiux',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card skills-card" data-tags="🎨制作・生成・ゲーム" onclick="copyCmd(this,'Remotion')">
+  <div class="card skills-card" data-tags="🎨制作・生成・ゲーム" data-id="remotion" onclick="openPopup('remotion')">
     <div class="card-left">
-      <div class="cmd">Remotion</div>
+      <div class="cmd">Remotion<span class="pos-inline pos-inline-before">前につける</span></div>
       <div class="effect">テキストから動画を生成</div>
-      <div class="pos-preview"><span class="pos-box">Remotion</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">🎨制作・ゲーム</span></div>
+      <div class="card-tags"><span class="ctag">🎨 制作・生成・ゲーム</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'Remotion')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('remotion',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card skills-card" data-tags="💻コード" onclick="copyCmd(this,'Context Engineering')">
+  <div class="card skills-card" data-tags="✍️文章・ライティング 📊マーケ・ビジネス" data-id="copywriting" onclick="openPopup('copywriting')">
     <div class="card-left">
-      <div class="cmd">Context Engineering</div>
-      <div class="effect">トークン消費を抑えてコスト・速度を最適化</div>
-      <div class="pos-preview"><span class="pos-box">Context Engineering</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💻コード</span></div>
+      <div class="cmd">/copywriting<span class="pos-inline pos-inline-before">前につける</span></div>
+      <div class="effect">LPやセールス文章を何パターンも作成</div>
+      <div class="card-tags"><span class="ctag">✍️ 文章</span><span class="ctag">📊 マーケ</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/copywriting')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('copywriting',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card skills-card" data-tags="✍️文章・ライティング 📊マーケ・ビジネス" onclick="copyCmd(this,'/copywriting')">
+  <div class="card skills-card" data-tags="📊マーケ・ビジネス" data-id="emails" onclick="openPopup('emails')">
     <div class="card-left">
-      <div class="cmd">/copywriting</div>
-      <div class="effect">LPやセールス文章を作成。誰に向けて何パターンも出してくれる</div>
-      <div class="pos-preview"><span class="pos-box">/copywriting</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">✍️文章</span><span class="ctag">📊マーケ</span></div>
+      <div class="cmd">/emails<span class="pos-inline pos-inline-before">前につける</span></div>
+      <div class="effect">メールシナリオを一括作成</div>
+      <div class="card-tags"><span class="ctag">📊 マーケ</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/emails')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('emails',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card skills-card" data-tags="📊マーケ・ビジネス" onclick="copyCmd(this,'/emails')">
+  <div class="card skills-card" data-tags="📊マーケ・ビジネス 🎨制作・生成・ゲーム" data-id="adcreative" onclick="openPopup('adcreative')">
     <div class="card-left">
-      <div class="cmd">/emails</div>
-      <div class="effect">登録後のあいさつメールから「いつ何を送れば売れやすいか」まで一括作成</div>
-      <div class="pos-preview"><span class="pos-box">/emails</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📊マーケ</span></div>
+      <div class="cmd">/ad-creative<span class="pos-inline pos-inline-before">前につける</span></div>
+      <div class="effect">媒体に合わせた広告コピーを作成</div>
+      <div class="card-tags"><span class="ctag">📊 マーケ</span><span class="ctag">🎨 制作</span></div>
     </div>
-    <button class="copy-btn">📋</button>
-  </div>
-
-  <div class="card skills-card" data-tags="📊マーケ・ビジネス 🎨制作・生成・ゲーム" onclick="copyCmd(this,'/ad-creative')">
-    <div class="card-left">
-      <div class="cmd">/ad-creative</div>
-      <div class="effect">媒体・場所に合わせた広告タイトル・コピーを作成</div>
-      <div class="pos-preview"><span class="pos-box">/ad-creative</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">📊マーケ</span><span class="ctag">🎨制作・ゲーム</span></div>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'/ad-creative')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('adcreative',this)">☆</button>
     </div>
-    <button class="copy-btn">📋</button>
-  </div>
-
-  <div class="card skills-card" data-tags="💻コード" onclick="copyCmd(this,'code-review')">
-    <div class="card-left">
-      <div class="cmd">code-review</div>
-      <div class="effect">コードのレビューと改善案を出してくれる</div>
-      <div class="pos-preview"><span class="pos-box">code-review</span><span class="pos-text">→ 質問・指示</span></div>
-      <div class="card-tags"><span class="ctag">💻コード</span></div>
-    </div>
-    <button class="copy-btn">📋</button>
   </div>
 </div>
 
@@ -652,108 +777,383 @@
 <div class="section" id="section-mode">
   <div class="group-label">用途別に使い分けるモード</div>
 
-  <div class="card claude-card" data-tags="⚙️設定・モード" onclick="copyCmd(this,'Claude.ai（CHAT）')">
+  <div class="card claude-card" data-tags="⚙️設定・モード" data-id="claudechat" onclick="openPopup('claudechat')">
     <div class="card-left">
       <div class="cmd">Claude.ai（CHAT）</div>
       <div class="effect">普通の会話・文章作成・アイデア出しに使う標準モード</div>
-      <div class="card-tags"><span class="ctag">⚙️設定</span></div>
+      <div class="card-tags"><span class="ctag">⚙️ 設定</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'Claude.ai（CHAT）')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('claudechat',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="⚙️設定・モード 📊マーケ・ビジネス" onclick="copyCmd(this,'Claude Cowork')">
+  <div class="card claude-card" data-tags="⚙️設定・モード 📊マーケ・ビジネス" data-id="cowork" onclick="openPopup('cowork')">
     <div class="card-left">
       <div class="cmd">Claude Cowork</div>
       <div class="effect">秘書的な存在として実務タスクを自律処理させるモード</div>
-      <div class="card-tags"><span class="ctag">⚙️設定</span><span class="ctag">📊マーケ</span></div>
+      <div class="card-tags"><span class="ctag">⚙️ 設定</span><span class="ctag">📊 マーケ</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'Claude Cowork')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('cowork',this)">☆</button>
+    </div>
   </div>
 
-  <div class="card claude-card" data-tags="⚙️設定・モード 💻コード 🎨制作・生成・ゲーム" onclick="copyCmd(this,'Claude Code')">
+  <div class="card claude-card" data-tags="⚙️設定・モード 💻コード 🎨制作・生成・ゲーム" data-id="claudecode" onclick="openPopup('claudecode')">
     <div class="card-left">
       <div class="cmd">Claude Code</div>
       <div class="effect">コード生成・仕組み化・システム構築に特化したモード</div>
-      <div class="card-tags"><span class="ctag">⚙️設定</span><span class="ctag">💻コード</span><span class="ctag">🎨制作・ゲーム</span></div>
+      <div class="card-tags"><span class="ctag">⚙️ 設定</span><span class="ctag">💻 コード</span><span class="ctag">🎨 制作</span></div>
     </div>
-    <button class="copy-btn">📋</button>
+    <div class="card-actions">
+      <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'Claude Code')">📋</button>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('claudecode',this)">☆</button>
+    </div>
   </div>
 </div>
 
-<div class="note">
-  ⚠️ これらは公式コマンドではなく、SNS投稿者が独自に命名したプロンプト省略表現です。効果には個人差があります。
+<!-- お気に入り -->
+<div class="section active" id="section-fav">
+  <div id="fav-list"></div>
+  <div class="empty-fav" id="fav-empty">
+    <div class="icon">⭐</div>
+    <div>お気に入りはまだありません<br>☆ボタンで追加できます</div>
+  </div>
 </div>
 
+<!-- 自動化ツール -->
+<div class="section" id="section-auto">
+
+  <div class="group-label">Claude 制限対策・自動再開</div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-claude">Claude</span>
+      <span class="tool-name">Claude Auto-Continue</span>
+    </div>
+    <div class="tool-desc">
+      🌐 <strong>ブラウザ用（Chrome拡張）</strong><br>
+      claude.aiでツール使用上限に達したとき、「Continue」ボタンを自動でクリックしてくれる拡張機能。バックグラウンドタブでも動作するので、長い作業中に席を外しても止まらない。インストールするだけで有効。
+    </div>
+    <button class="tool-link" onclick="copyUrl('https://chromewebstore.google.com/detail/claude-auto-continue/pmdfdcmdkocmfjjeflbhimdhafekbfei')">URLをコピー 📋</button>
+    <div class="tool-url">chromewebstore.google.com/detail/claude-auto-continue/pmdfdcmdkocmfjjeflbhimdhafekbfei</div>
+  </div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-claude">Claude Code</span>
+      <span class="tool-name">claude-auto-resume</span>
+    </div>
+    <div class="tool-desc">
+      💻 <strong>ターミナル用（シェルスクリプト）</strong><br>
+      Claude Codeが5時間の使用制限に達したとき、自動で待機してリセット後に再開してくれるスクリプト。一晩放置しても朝には作業が続いている。コーディングの長時間タスクに最適。
+    </div>
+    <button class="tool-link" onclick="copyUrl('https://github.com/terryso/claude-auto-resume')">URLをコピー 📋</button>
+    <div class="tool-url">github.com/terryso/claude-auto-resume</div>
+  </div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-claude">Claude Code</span>
+      <span class="tool-name">claude-auto-retry</span>
+    </div>
+    <div class="tool-desc">
+      💻 <strong>ターミナル用（自動リトライツール）</strong><br>
+      制限メッセージからリセット時刻を自動で読み取り、ちょうどそのタイミングで再開してくれる。「5時間後に再開」のような固定待機ではなく、正確なタイミングで動くのが強み。
+    </div>
+    <button class="tool-link" onclick="copyUrl('https://cheapestinference.com/blog/claude-code-usage-limit-auto-retry/')">URLをコピー 📋</button>
+    <div class="tool-url">cheapestinference.com/blog/claude-code-usage-limit-auto-retry</div>
+  </div>
+
+  <div class="group-label">会話引き継ぎフレーズ（コピーして使う）</div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-all">全AI共通</span>
+      <span class="tool-name">ハンドオフプロンプト</span>
+    </div>
+    <div class="tool-desc">
+      📋 <strong>制限が来る前に使う</strong><br>
+      会話が長くなってきたら、これを送ると次のセッションにそのまま引き継げる要約文を作ってくれる。制限でいきなり止まる前に早めに使うのがコツ。
+    </div>
+    <button class="tool-link" onclick="copyText('コンテキストの使用量が多くなってきました。新しいセッションで続けられるよう、ゴール・現在の状況・重要な決定事項・次のステップをまとめたハンドオフプロンプトを作成してください。')">フレーズをコピー 📋</button>
+  </div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-all">全AI共通</span>
+      <span class="tool-name">会話再開フレーズ</span>
+    </div>
+    <div class="tool-desc">
+      📋 <strong>新しいセッションを始めるときに使う</strong><br>
+      ハンドオフプロンプトで作った要約をコピーして、新しい会話の最初にこのフレーズと一緒に貼り付けるだけ。前のセッションからスムーズに続きを再開できる。
+    </div>
+    <button class="tool-link" onclick="copyText('前回の会話のコンテキストです。続けてください：\n[ここに前回のサマリーを貼り付け]\n\nでは次に〇〇をお願いします。')">フレーズをコピー 📋</button>
+  </div>
+
+  <div class="group-label">ChatGPT 自動化ツール</div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-chatgpt">ChatGPT</span>
+      <span class="tool-name">ChatGPT Agent</span>
+    </div>
+    <div class="tool-desc">
+      🌐 <strong>ウェブ操作・外部アプリ連携</strong><br>
+      ブラウザ操作・フォーム入力・外部サービスへの実行を自律的にこなすエージェント機能。「このフォームを埋めて送信して」「このサイトから情報を取ってきて」などが可能。ChatGPT Plus以上で使える。
+    </div>
+    <button class="tool-link" onclick="copyUrl('https://chatgpt.com')">URLをコピー 📋</button>
+    <div class="tool-url">chatgpt.com → Agent機能をオン</div>
+  </div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-chatgpt">ChatGPT</span>
+      <span class="tool-name">Zapier × ChatGPT連携</span>
+    </div>
+    <div class="tool-desc">
+      🔗 <strong>9,000以上のアプリと自動連携</strong><br>
+      GmailやSlack・Notionなど9,000以上のアプリとChatGPTをつないで自動化できる。「新しいメールが来たら要約してSlackに送る」「フォームが送信されたら返信文を作る」などが可能。コード不要。
+    </div>
+    <button class="tool-link" onclick="copyUrl('https://zapier.com/apps/chatgpt/integrations')">URLをコピー 📋</button>
+    <div class="tool-url">zapier.com/apps/chatgpt/integrations</div>
+  </div>
+
+  <div class="group-label">Gemini 自動化ツール</div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-gemini">Gemini</span>
+      <span class="tool-name">Gemini Spark</span>
+    </div>
+    <div class="tool-desc">
+      📱 <strong>スマホのバックグラウンド自動実行</strong><br>
+      スマホがロック中でもクラウド上でGeminiがタスクを自動実行し続ける機能。「〇〇が起きたら通知して」「毎朝ニュースをまとめて」などをスマホが眠っている間も実行できる。Android向け。
+    </div>
+    <button class="tool-link" onclick="copyUrl('https://gemini.google.com')">URLをコピー 📋</button>
+    <div class="tool-url">gemini.google.com → Spark機能</div>
+  </div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <span class="tool-badge badge-gemini">Gemini</span>
+      <span class="tool-name">Google Workspace自動連携</span>
+    </div>
+    <div class="tool-desc">
+      📧 <strong>Gmail・カレンダー・Docsと直接連携</strong><br>
+      GmailやGoogleカレンダー・Docsに直接組み込まれているので、別途ツールの設定不要。「このメールに返信して」「会議の議事録をDocsにまとめて」などをGoogleのサービス内で完結できる。
+    </div>
+    <button class="tool-link" onclick="copyUrl('https://workspace.google.com/intl/ja/features/gemini/')">URLをコピー 📋</button>
+    <div class="tool-url">workspace.google.com → Gemini機能</div>
+  </div>
+
+</div>
+
+<div class="note">⚠️ これらは公式コマンドではなく、SNS投稿者が独自に命名したプロンプト省略表現です。効果には個人差があります。</div>
 <div class="toast" id="toast">コピーしました！</div>
 
+<!-- ポップアップ -->
+<div class="overlay" id="overlay" onclick="closePopup()">
+  <div class="popup" onclick="event.stopPropagation()">
+    <div class="popup-handle"></div>
+    <div class="popup-cmd" id="popup-cmd"></div>
+    <div class="popup-reading" id="popup-reading"></div>
+    <div class="popup-effect" id="popup-effect"></div>
+    <div class="popup-section-label">使い方</div>
+    <div class="popup-usage" id="popup-usage"></div>
+    <div class="popup-section-label" style="margin-top:16px">入力位置</div>
+    <div class="popup-pos" id="popup-pos"></div>
+    <button class="popup-copy-btn" id="popup-copy-btn">コピーする 📋</button>
+  </div>
+</div>
+
 <script>
-  const tabs = document.querySelectorAll('.tab');
-  let currentTag = 'all';
-  let currentSection = 'claude';
+const COMMANDS = {
+  formal:      { cmd:'/formal', reading:'', effect:'一瞬で完璧なビジネス敬語に変換', pos:'後', usage:'文章を書いた後に末尾へ追加するだけ。長文でも短文でも使えます。', example:'「お世話になっております。例の件について確認させてください。 /formal」\n→ 丁寧なビジネスメールに変換してくれます。' },
+  logic:       { cmd:'/logic', reading:'', effect:'コンサル級の論理分析をしてくれる', pos:'後', usage:'問いかけや課題の後に追加。MECEな構造で論理的に分析してくれます。', example:'「なぜ売上が伸びないか考えて /logic」\n→ 原因を構造的に分解して提示してくれます。' },
+  todo:        { cmd:'/todo', reading:'', effect:'議事録からタスクを爆速抽出', pos:'後', usage:'会議メモや長文テキストの後につけるだけ。誰が何をいつまでにやるかを整理してくれます。', example:'「（会議メモを貼り付け） /todo」\n→ 担当者・タスク・期日の一覧表を出してくれます。' },
+  boss:        { cmd:'/boss', reading:'', effect:'鬼上司の視点で資料を厳しく添削', pos:'後', usage:'資料や企画書を貼り付けて末尾に追加。遠慮なしにダメ出ししてくれます。', example:'「（企画書を貼り付け） /boss」\n→ 「この数字の根拠は？」「結論が弱い」など具体的に指摘してくれます。' },
+  '1page':     { cmd:'/1page', reading:'', effect:'長文を1分で読める要約に圧縮', pos:'後', usage:'長い文章・記事・資料を貼り付けて末尾に追加するだけ。', example:'「（長い記事を貼り付け） /1page」\n→ 要点を箇条書きでコンパクトにまとめてくれます。' },
+  goal:        { cmd:'/goal', reading:'', effect:'指定したゴールまで自律的にやり切る', pos:'前', usage:'達成したいゴールを書いてから作業を指示。途中で確認せずゴールまでやり切ってくれます。', example:'「/goal ブログ記事を3本書いてSNS投稿文も作る」\n→ 自分で計画を立てて順番にこなしてくれます。' },
+  loop:        { cmd:'/loop', reading:'', effect:'一定時間ごとに同じ作業を繰り返す', pos:'前', usage:'繰り返したい作業を指定して使います（実際の自動実行にはツール連携が必要）。', example:'「/loop 毎日朝8時にニュースをまとめて」\n→ 定期タスクの設定をサポートしてくれます。' },
+  schedule:    { cmd:'/schedule', reading:'', effect:'指定時刻に自動起動する', pos:'前', usage:'時刻や日程を指定してタスクを設定します（実際の自動実行にはツール連携が必要）。', example:'「/schedule 毎週月曜朝9時に週次レポートを作る」\n→ スケジュールに合わせた実行設定をサポートします。' },
+  ghost:       { cmd:'/ghost', reading:'ゴースト', effect:'AIっぽさを消して自然な文章で回答する', pos:'前', usage:'文章生成の指示の前につけて使います。人間が書いたような自然な文体になります。', example:'「/ghost 友達に送るLINEを書いて。明日の飲み会行けないって伝えたい」\n→ AIっぽい固い文体を避けてカジュアルに書いてくれます。' },
+  artifacts:   { cmd:'ARTIFACTS', reading:'アーティファクト', effect:'アプリ・ゲーム・ダッシュボードなどをプロンプトで直接生成する', pos:'後', usage:'作りたいものを説明した後に末尾へ追加。コードではなく動くアプリとして出力してくれます。', example:'「シンプルなタイマーアプリを作って ARTIFACTS」\n→ そのまま動くHTMLアプリを生成してくれます。' },
+  ooda:        { cmd:'OODA', reading:'ウーダ', effect:'軍事由来の意思決定フレームワークで問題を分析し回答する', pos:'前', usage:'問題や状況を伝える前につけて使います。観察→判断→決定→行動の4ステップで整理してくれます。', example:'「OODA 競合他社が新サービスを出してきた。どう対応すべきか」\n→ 状況分析から具体的な行動プランまで体系的に提示してくれます。' },
+  l99:         { cmd:'L99', reading:'エルきゅうじゅうきゅう', effect:'最も高度で専門的なレベルの回答を引き出す', pos:'後', usage:'複雑な問題や専門的な内容を質問した後に追加。より深くレベルの高い回答が得られます。', example:'「量子コンピュータが暗号技術に与える影響を教えて L99」\n→ 専門家レベルの詳細な回答を出してくれます。' },
+  godmode:     { cmd:'/godmode', reading:'ゴッドモード', effect:'積極的かつ包括的な回答スタイルで制限なしで回答させる', pos:'前', usage:'指示の前につけて使います。通常より大胆で詳細な回答を引き出せます。', example:'「/godmode このビジネスプランの問題点を全部洗い出して」\n→ 遠慮なく全ての問題点を指摘してくれます。' },
+  brains:      { cmd:'/BRAINS', reading:'ブレインズ', effect:'アイデアをあらゆる角度から広げてくれる', pos:'前', usage:'テーマや課題を伝える前につけて使います。予想外の視点も含めて大量のアイデアを出してくれます。', example:'「/BRAINS 新しいカフェのコンセプト」\n→ ニッチなアイデアから王道まで多角的に提案してくれます。' },
+  voice:       { cmd:'/VOICE', reading:'ボイス', effect:'過去の文章から自分だけの文体を定義してくれる', pos:'前', usage:'自分が書いた文章サンプルを貼り付けて前につけます。以降は自分の文体で書いてくれます。', example:'「/VOICE （自分のブログ記事を貼り付け）」\n→ 語尾・テンポ・表現の癖を学習して定義してくれます。' },
+  brainstorm:  { cmd:'/brainstorm', reading:'ブレインストーム', effect:'テーマについてアイデアを広げてくれる', pos:'前', usage:'アイデアを出したいテーマを伝える前につけます。量を重視してどんどん出してくれます。', example:'「/brainstorm 動画コンテンツのネタ」\n→ ジャンルを問わず多様なアイデアを一気に出してくれます。' },
+  devils:      { cmd:"devil's advocate", reading:'デビルズアドボケート', effect:'自分の考えや主張の弱点・反論を指摘してくれる', pos:'前', usage:'自分のアイデアや計画を伝える前につけます。あえて反論する視点で弱点を探してくれます。', example:'「devil\'s advocate 副業でYouTubeを始めようと思う」\n→ リスクや見落としている課題を指摘してくれます。' },
+  eli5:        { cmd:'ELI5', reading:'イーエルアイファイブ', effect:'専門知識ゼロの人でもわかるようにやさしく説明してくれる', pos:'前', usage:'難しいトピックを質問する前につけます。子どもでもわかる言葉で噛み砕いて説明してくれます。', example:'「ELI5 ブロックチェーンって何？」\n→ 身近な例え話を使って超わかりやすく説明してくれます。' },
+  stepbystep:  { cmd:'step by step', reading:'ステップバイステップ', effect:'手順を一個ずつ順番に丁寧に説明してくれる', pos:'後', usage:'手順を知りたいことを聞いた後に追加。一つ一つの工程を番号つきで丁寧に教えてくれます。', example:'「WordPressにプラグインを入れる方法 step by step」\n→ 1.〇〇 2.〇〇 と順番に細かく教えてくれます。' },
+  codereview:  { cmd:'code-review', reading:'', effect:'コードのレビューと改善案を出してくれる', pos:'前', usage:'コードを貼り付ける前につけます。バグ・パフォーマンス・読みやすさなど複数の観点でレビューしてくれます。', example:'「code-review （コードを貼り付け）」\n→ 問題点と改善案をセットで提示してくれます。' },
+  contexteng:  { cmd:'Context Engineering', reading:'', effect:'トークン消費を抑えてコスト・速度を最適化（Claude専用）', pos:'前', usage:'長い会話や大量のコードを扱うときに前につけます。効率的な情報整理をしてくれます。', example:'「Context Engineering このプロジェクト全体のコードをレビューして」\n→ 必要な情報を優先して処理し、トークンを節約してくれます。' },
+  human:       { cmd:'/human', reading:'', effect:'自然で人間らしい口調の回答に変える', pos:'前', usage:'回答の前につけるだけ。AIっぽい固い文体を避けて話しかけるような自然な文体になります。', example:'「/human 今日のTODOリストを整理して」\n→ フレンドリーで読みやすい文体で答えてくれます。' },
+  el10:        { cmd:'/EL10', reading:'', effect:'子どもでもわかるやさしい言葉で説明', pos:'前', usage:'難しいトピックを質問する前につけます。ELI5と似ていますが10歳レベルを想定しています。', example:'「/EL10 AIって何をしているの？」\n→ 難しい言葉を使わずにやさしく説明してくれます。' },
+  x10think:    { cmd:'/X10THINK', reading:'', effect:'即答せず深く考えてから答えてくれる', pos:'前', usage:'複雑な問題や重要な意思決定の前につけます。じっくり考えてから回答してくれます。', example:'「/X10THINK 転職すべきかどうか判断したい」\n→ 多角的にじっくり考えた上で答えてくれます。' },
+  killcritic:  { cmd:'/KILLCRITIC', reading:'', effect:'忖度をやめて事実だけを話してくれる', pos:'前', usage:'厳しいフィードバックや本音が欲しいときに前につけます。褒め言葉なしで事実だけ伝えてくれます。', example:'「/KILLCRITIC 私のブログ記事を評価して（記事を貼り付け）」\n→ お世辞なしで問題点を率直に教えてくれます。' },
+  alt3:        { cmd:'/ALT3', reading:'', effect:'3パターンの異なる回答を同時に提示', pos:'前', usage:'選択肢が欲しいときに前につけます。方向性の違う3案を一気に出してくれます。', example:'「/ALT3 新商品のキャッチコピーを考えて」\n→ 方向性の違う3パターンのコピーを出してくれます。' },
+  style:       { cmd:'/style', reading:'', effect:'AIっぽさを消して自然な文章にする', pos:'前', usage:'文章生成を依頼する前につけます。機械的な表現を避けて人間らしい文体で書いてくれます。', example:'「/style 商品説明文を書いて。ナチュラルコスメのボディクリーム」\n→ 自然でおしゃれな文章にしてくれます。' },
+  perspective: { cmd:'/perspective', reading:'', effect:'専門家の視点で適切・正確に答える', pos:'前', usage:'専門的な知識が必要なときに前につけます。その分野の専門家として回答してくれます。', example:'「/perspective このマーケティング戦略の評価をして」\n→ マーケターとして専門的な視点で分析してくれます。' },
+  short:       { cmd:'/short', reading:'', effect:'長い回答を2〜3行に要約', pos:'前', usage:'簡潔な回答が欲しいときに前につけます。余計な説明を省いてズバリ答えてくれます。', example:'「/short 機械学習とディープラーニングの違いは？」\n→ 2〜3行でシンプルに答えてくれます。' },
+  format:      { cmd:'/format', reading:'', effect:'文章を整えて圧倒的に読みやすくする', pos:'前', usage:'読みにくい文章を整えたいときに前につけます。見出し・箇条書き・段落を整理してくれます。', example:'「/format （読みにくい文章を貼り付け）」\n→ 構造を整えて一気に読みやすくしてくれます。' },
+  task:        { cmd:'/task', reading:'', effect:'やるべき手順を具体的にスケジュール化', pos:'前', usage:'プロジェクトや目標を伝える前につけます。何をいつどの順番でやるかを整理してくれます。', example:'「/task 来月までにYouTubeチャンネルを開設したい」\n→ 週ごとのタスクと優先順位を出してくれます。' },
+  maekiNashi:  { cmd:'前置きなしで答えて', reading:'', effect:'余計な前置きを省いて結論から即答', pos:'前', usage:'指示の前に追加します。「もちろんです！」などの前置きなしに即答えてくれます。', example:'「前置きなしで答えて 最近の円安の原因は？」\n→ 余計な言葉なしに結論から答えてくれます。' },
+  sontaku:     { cmd:'忖度なしで正直に答えて', reading:'', effect:'お世辞をやめて本音・厳しい意見を言う', pos:'前', usage:'評価やフィードバックを求めるときに前につけます。優しい嘘をつかずに本音で答えてくれます。', example:'「忖度なしで正直に答えて 私のポートフォリオの評価をして」\n→ 良い点も悪い点も正直に伝えてくれます。' },
+  reset:       { cmd:'さっきまでの流れをリセットして答えて', reading:'', effect:'長い会話の文脈をリセットして精度を回復', pos:'前', usage:'会話が長くなって精度が落ちてきたと感じたときに使います。', example:'「さっきまでの流れをリセットして答えて 改めて質問します…」\n→ 前の文脈に引きずられず新鮮な視点で回答してくれます。' },
+  marketing:   { cmd:'Marketing skills', reading:'', effect:'マーケティング作業を23種のエージェントが代行', pos:'前', usage:'マーケティング関連の作業を依頼する前につけます。専門エージェントが代わりに対応してくれます。', example:'「Marketing skills SNS投稿の戦略を考えて」\n→ ターゲット分析・コンテンツ戦略・投稿計画まで出してくれます。' },
+  stopslop:    { cmd:'Stop Slop', reading:'', effect:'AIっぽい硬い文章を自然な文体に変換', pos:'前', usage:'AIが生成した固い文章を人間らしく直したいときに前につけます。', example:'「Stop Slop （AIが書いた文章を貼り付け）」\n→ 「なお」「また」「しかしながら」などのAI語を除いて自然にしてくれます。' },
+  uiux:        { cmd:'UI UX Pro Max', reading:'', effect:'プロ品質のUI/UXデザインを生成', pos:'前', usage:'画面やUIを設計したいときに前につけます。プロのデザイナー視点でデザインしてくれます。', example:'「UI UX Pro Max 健康管理アプリのトップ画面を設計して」\n→ 配置・色・フローまでプロレベルで提案してくれます。' },
+  remotion:    { cmd:'Remotion', reading:'', effect:'テキストから動画を生成', pos:'前', usage:'動画コンテンツを作りたいときに前につけます。スクリプトや構成を動画形式で出力してくれます。', example:'「Remotion 商品紹介の30秒動画を作って」\n→ シーン・ナレーション・テロップを動画形式で生成してくれます。' },
+  copywriting: { cmd:'/copywriting', reading:'', effect:'LPやセールス文章を何パターンも作成', pos:'前', usage:'セールス文章やランディングページを作りたいときに前につけます。', example:'「/copywriting ダイエットサプリのLP文章。ターゲットは30代女性」\n→ 複数パターンのLP文章を出してくれます。' },
+  emails:      { cmd:'/emails', reading:'', effect:'メールシナリオを一括作成', pos:'前', usage:'メルマガや自動返信メールを作りたいときに前につけます。', example:'「/emails 無料登録後の7日間ステップメール。英語学習サービス向け」\n→ 7日分のメール内容と配信タイミングを出してくれます。' },
+  adcreative:  { cmd:'/ad-creative', reading:'', effect:'媒体に合わせた広告コピーを作成', pos:'前', usage:'広告文を作りたいときに前につけます。媒体ごとの特性に合わせたコピーを作ってくれます。', example:'「/ad-creative Instagram広告。20代向けファッションブランド」\n→ キャプション・CTA・ハッシュタグまで出してくれます。' },
+  claudechat:  { cmd:'Claude.ai（CHAT）', reading:'', effect:'普通の会話・文章作成・アイデア出しに使う標準モード', pos:'-', usage:'日常的なAI活用に使う基本のモード。チャット感覚で何でも相談できます。', example:'ブレスト・文章作成・調べもの・翻訳など幅広い用途に対応。\n特別な設定なしにすぐ使えます。' },
+  cowork:      { cmd:'Claude Cowork', reading:'', effect:'秘書的な存在として実務タスクを自律処理させるモード', pos:'-', usage:'ファイル操作・スケジュール管理・タスク実行など実務を丸ごと任せられます。', example:'「週次レポートをまとめてカレンダーに追加して」\n→ 複数のステップを自律的にこなしてくれます。' },
+  claudecode:  { cmd:'Claude Code', reading:'', effect:'コード生成・仕組み化・システム構築に特化したモード', pos:'-', usage:'ターミナルで動くコーディングエージェント。大規模なプログラム開発に使います。', example:'「このWebアプリにログイン機能を追加して」\n→ ファイルの読み書きから実装まで丸ごとやってくれます。' },
+};
 
-  function showSection(name, el) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById('section-' + name).classList.add('active');
-    tabs.forEach(t => t.className = 'tab');
-    el.className = 'tab active-' + name;
-    currentSection = name;
-    applyFilter();
-  }
+let favs = JSON.parse(localStorage.getItem('ai-cmd-favs') || '[]');
+let currentSection = 'fav';
+let currentTag = 'all';
 
-  function filterTag(tag, el) {
-    currentTag = tag;
-    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    applyFilter();
-  }
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
+  el.className = 'tab active-' + name;
+  currentSection = name;
+  if (name === 'fav') renderFavs();
+  applyFilter();
+}
 
-  function applyFilter() {
-    const section = document.getElementById('section-' + currentSection);
-    if (!section) return;
-    section.querySelectorAll('.card').forEach(card => {
-      if (currentTag === 'all') {
-        card.classList.remove('hidden');
-      } else {
-        const tags = card.dataset.tags || '';
-        card.classList.toggle('hidden', !tags.includes(currentTag));
-      }
-    });
-  }
+function filterTag(tag, el) {
+  currentTag = tag;
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilter();
+}
 
-  function copyCmd(card, text) {
-    const done = () => {
-      card.classList.add('copied');
-      card.querySelector('.copy-btn').textContent = '✅';
-      showToast();
-      setTimeout(() => {
-        card.classList.remove('copied');
-        card.querySelector('.copy-btn').textContent = '📋';
-      }, 2000);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
-    } else {
-      fallbackCopy(text, done);
-    }
-  }
+function applyFilter() {
+  const section = document.getElementById('section-' + currentSection);
+  if (!section) return;
+  section.querySelectorAll('.card').forEach(card => {
+    if (currentTag === 'all') { card.classList.remove('hidden'); }
+    else { card.classList.toggle('hidden', !(card.dataset.tags || '').includes(currentTag)); }
+  });
+}
 
-  function fallbackCopy(text, done) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try { document.execCommand('copy'); done(); } catch(e) {}
-    document.body.removeChild(ta);
-  }
+function copyCmd(card, text) {
+  const done = () => {
+    card.classList.add('copied');
+    card.querySelector('.copy-btn').textContent = '✅';
+    showToast();
+    setTimeout(() => { card.classList.remove('copied'); card.querySelector('.copy-btn').textContent = '📋'; }, 2000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else { fallbackCopy(text, done); }
+}
 
-  function showToast() {
-    const t = document.getElementById('toast');
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 1800);
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); done(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function toggleFav(id, btn) {
+  if (favs.includes(id)) {
+    favs = favs.filter(f => f !== id);
+    btn.textContent = '☆'; btn.classList.remove('active');
+  } else {
+    favs.push(id);
+    btn.textContent = '⭐'; btn.classList.add('active');
   }
+  localStorage.setItem('ai-cmd-favs', JSON.stringify(favs));
+  syncFavBtns();
+}
+
+function syncFavBtns() {
+  document.querySelectorAll('.fav-btn').forEach(btn => {
+    const id = btn.closest('.card').dataset.id;
+    if (favs.includes(id)) { btn.textContent = '⭐'; btn.classList.add('active'); }
+    else { btn.textContent = '☆'; btn.classList.remove('active'); }
+  });
+}
+
+function renderFavs() {
+  const list = document.getElementById('fav-list');
+  const empty = document.getElementById('fav-empty');
+  if (favs.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = favs.map(id => {
+    const c = COMMANDS[id]; if (!c) return '';
+    return `<div class="card claude-card" data-id="${id}" onclick="openPopup('${id}')">
+      <div class="card-left">
+        <div class="cmd">${c.cmd}</div>
+        <div class="effect">${c.effect}</div>
+      </div>
+      <div class="card-actions">
+        <button class="copy-btn" onclick="event.stopPropagation();copyCmd(this.closest('.card'),'${c.cmd.replace(/'/g,"\\'")}')">📋</button>
+        <button class="fav-btn active" onclick="event.stopPropagation();toggleFav('${id}',this)">⭐</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openPopup(id) {
+  const c = COMMANDS[id]; if (!c) return;
+  document.getElementById('popup-cmd').textContent = c.cmd;
+  document.getElementById('popup-reading').textContent = c.reading ? `読み方: ${c.reading}` : '';
+  document.getElementById('popup-effect').textContent = c.effect;
+  document.getElementById('popup-usage').innerHTML = `<p>${c.usage}</p><div class="example">${c.example.replace(/\n/g,'<br>')}</div>`;
+  const pos = c.pos === '前' ? '<span class="pos-box">コマンド</span><span class="pos-text">→ 質問・指示</span>'
+            : c.pos === '後' ? '<span class="pos-text">質問・指示 →</span><span class="pos-box">コマンド</span>'
+            : '<span class="pos-text">— 入力位置は関係なし</span>';
+  document.getElementById('popup-pos').innerHTML = pos;
+  const btn = document.getElementById('popup-copy-btn');
+  btn.onclick = () => { navigator.clipboard.writeText(c.cmd).catch(() => {}); showToast(); };
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closePopup() { document.getElementById('overlay').classList.remove('show'); }
+
+function copyUrl(url) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(showToast).catch(() => fallbackCopyText(url));
+  } else { fallbackCopyText(url); }
+}
+
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showToast).catch(() => fallbackCopyText(text));
+  } else { fallbackCopyText(text); }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); showToast(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+// 初期化
+syncFavBtns();
+renderFavs();
+document.getElementById('section-fav').classList.add('active');
 </script>
 </body>
 </html>
