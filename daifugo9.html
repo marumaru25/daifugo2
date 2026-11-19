@@ -102,7 +102,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); position: relative; flex-shrink: 0; display:flex; flex-direction:column; align-items:center; transition: all 0.3s;
         }
         .player-status.active-turn { border-color: var(--active-glow); background: rgba(0, 229, 255, 0.15); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); transform: translateY(-2px); z-index: 10; }
-        .player-status.active-turn::after { content: "手番"; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--active-glow); color: #000; font-size: 11px; padding: 1px 8px; border-radius: 8px; font-weight: 900; z-index: 15; }
+        .player-status.active-turn::after { content: "手番"; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: var(--active-glow); color: #000; font-size: 11px; padding: 1px 8px; border-radius: 8px; font-weight: 900; z-index: 15; }
         .player-status.clickable { cursor: pointer; border-color: rgba(255,230,109,0.5); }
         .player-status.clickable:hover { background: rgba(255,230,109,0.2); box-shadow: 0 0 8px rgba(255,230,109,0.4); transform: translateY(-2px); }
         .player-status.viewing { border-color: var(--accent); background: rgba(255,230,109,0.25); box-shadow: 0 0 15px rgba(255,230,109,0.6); }
@@ -274,6 +274,8 @@
         .hand-area.my-turn-now { box-shadow: inset 0 3px 0 rgba(255,230,109,.9); }
         .thinking-dots::after { content: '…'; display: inline-block; width: 1.2em; text-align: left; animation: dotsBlink 1s steps(4) infinite; overflow: hidden; vertical-align: bottom; }
         @keyframes dotsBlink { 0% { width: 0; } 100% { width: 1.2em; } }
+        /* 結果画面では上のボタン類を隠す(タイトルに重なるため) */
+        body:has(#result-screen.active) #btn-sound, body:has(#result-screen.active) #btn-active-rules, body:has(#result-screen.active) #btn-show-rules, body:has(#result-screen.active) #game-room-code { display: none !important; }
         #react-panel { position: fixed; left: 8px; right: 8px; z-index: 9400; background: rgba(20,30,25,.97); border: 2px solid #f1c40f; border-radius: 16px; padding: 10px; box-shadow: 0 -6px 24px rgba(0,0,0,.6); display: none; max-width: 520px; margin: 0 auto; }
         #react-panel.show { display: block; animation: reactIn .18s ease-out; } @keyframes reactIn { from { transform: translateY(12px); opacity: 0; } }
         #react-panel .rp-title { font-size: 11px; font-weight: 900; color: #f1c40f; margin: 2px 2px 6px; }
@@ -1520,7 +1522,7 @@ function showRankWinAnim(playerName, rank) {
     const text = `${playerName} が\n${RANK_NAMES[rank]} で上がり!`; const el = document.createElement('div');
     el.style.cssText = "position:absolute; top:35%; left:50%; transform:translate(-50%,-50%) scale(0); font-size:32px; font-weight:900; color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.8), 2px 2px 4px #000; z-index:7500; pointer-events:none; text-align:center; line-height:1.4; white-space:nowrap; background:rgba(0,0,0,0.92); padding:20px 40px; border-radius:24px; border:5px solid #fff; box-shadow:0 0 60px rgba(255,255,255,0.3), 0 15px 40px rgba(0,0,0,0.9);";
     if(rank===0) el.style.borderColor = '#FFD700'; if(rank===1) el.style.borderColor = '#bdc3c7'; if(rank===3) el.style.borderColor = '#e67e22'; if(rank===4) { el.style.borderColor = '#c0392b'; el.style.color = '#ff7675'; }
-    el.style.whiteSpace = 'pre-line'; el.textContent = text; document.getElementById('game-container').appendChild(el);
+    el.style.whiteSpace = 'pre'; el.style.maxWidth = '94vw'; el.textContent = text; document.getElementById('game-container').appendChild(el);
     el.animate([{ transform: 'translate(-50%, -50%) scale(0) rotate(-5deg)', opacity: 0 }, { transform: 'translate(-50%, -50%) scale(1.1) rotate(2deg)', opacity: 1, offset: 0.6 }, { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 }], { duration: 600, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)', fill: 'forwards' });
     setTimeout(() => { el.animate([ { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(1.3)', opacity: 0 } ], { duration: 400, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove(); }, 3500);
 }
@@ -1979,6 +1981,16 @@ function renderGame() {
                 if(rdy < -45 && Math.abs(rdy) > Math.abs(rdx) && canFlickNow() && !window.isProcessingClient) {
                     // フリックで出す: このカード(+選択中のカード)をそのまま場へ
                     if(!selectedCards.includes(c.id)) selectedCards.push(c.id);
+                    { // そのカードだけでは出せない時(ペア待ちなど)は、同じ数字のカードを自動で足す
+                        const mh = (clientState.players.find(p=>p.id===me.id)||{}).hand || []; const sel = () => mh.filter(x=>selectedCards.includes(x.id));
+                        const need = clientState.board.cards.length;
+                        if(!validatePlay(sel(), clientState) && selectedCards.length === 1 && need > 1) {
+                            const mates = mh.filter(x=>x.id!==c.id && x.r===c.r && x.s!=='JOKER' && x.s!==c.s);
+                            const jok = mh.filter(x=>x.s==='JOKER');
+                            const pool = [...mates, ...jok];
+                            if(pool.length >= need-1) { const trial = [c.id, ...pool.slice(0, need-1).map(x=>x.id)]; const keep = selectedCards; selectedCards = trial; if(!validatePlay(sel(), clientState)) selectedCards = keep; }
+                        }
+                    }
                     DOM.btnPlay.onclick(); requestAnimationFrame(renderGame); return;
                 }
                 if(wasDragging || window.isProcessingClient) return;
@@ -2301,13 +2313,12 @@ function confetti(n = 40) {
     const orig = UI.showActionAnim;
     UI.showActionAnim = (text) => {
         orig(text); const t = String(text || '');
-        if(/革命返し/.test(t)) { showCutin('💫 革命返し!!', '強さが元に戻った', true); SFX.rev(); buzz([60, 40, 60, 40, 200]); }
-        else if(/革命/.test(t)) { showCutin('🔥 革 命 !!', '弱いカードが強くなる', false); SFX.rev(); buzz([80, 40, 200]); }
-        else if(/スペ3/.test(t)) { showCutin('⚔️ スペ3返し!!', 'JOKERを撃破', true); SFX.cut(); buzz([40, 30, 120]); }
-        else if(/8切り/.test(t)) { showCutin('✂️ 8 切 り !!', '場が流れる', false); SFX.cut(); buzz(80); }
+        if(/革命返し/.test(t)) { SFX.rev(); buzz([60, 40, 60, 40, 200]); }
+        else if(/革命/.test(t)) { SFX.rev(); buzz([80, 40, 200]); }
+        else if(/スペ3/.test(t)) { SFX.cut(); buzz([40, 30, 120]); }
+        else if(/8切り/.test(t)) { SFX.cut(); buzz(80); }
         else if(/縛り|スキップ|リバース|ボンバー|爆破|バック|渡し|捨て/.test(t)) {
-            const parts = t.split(/\s+/).filter(Boolean); const main = parts[0].replace(/^[^\p{L}\p{N}]+/u, ''); const sub = parts.slice(1).map(s => s.replace(/^[^\p{L}\p{N}]+/u, '')).join('・');
-            showCutin(main, sub, true); SFX.cut(); buzz([30, 30, 60]);
+            SFX.cut(); buzz([30, 30, 60]);
         }
         else if(/パス/.test(t)) SFX.pass();
         else SFX.play();
