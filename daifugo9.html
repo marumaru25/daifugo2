@@ -196,7 +196,8 @@
         .result-hero .hero-name { font-size: 20px; font-weight: 900; color: #FFD700; text-shadow: 2px 2px 0 #000; margin-top: 4px; }
         .title-chips { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 4px; } .title-chip { font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 10px; background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.35); white-space: nowrap; }
         .share-hint { text-align: center; font-size: 11px; color: #ddd; margin-top: 8px; }
-        #btn-sound { position: fixed; top: calc(var(--top-offset, 98px) + 12px); left: 105px; right: auto; z-index: 9500; width: 38px; height: 38px; padding: 0; margin: 0; border-radius: 50%; font-size: 18px; line-height: 38px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.4); box-shadow: none; }
+        #btn-sound { position: absolute; top: 12px; left: 105px; right: auto; z-index: 1000; width: 38px; height: 38px; padding: 0; margin: 5px 2px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; background: var(--secondary, #4ECDC4) !important; border: 3px solid #fff !important; box-shadow: 0 4px 8px rgba(0,0,0,.6) !important; }
+        body:has(#result-screen.active) #btn-sound { left: 15px; }
         #action-anim-text { position: absolute; top: 15px; left: 50%; font-size: 20px; font-weight: 900; color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); background: rgba(0, 0, 0, 0.75); padding: 8px 16px; border-radius: 12px; border: 2px solid var(--accent); box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100; pointer-events: none; opacity: 0; text-align: center; white-space: nowrap; }
         #action-anim-text { top: 4px !important; font-size: 15px !important; padding: 4px 14px !important; border-width: 1px !important; border-radius: 20px !important; max-width: 92%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 3px 8px rgba(0,0,0,.4) !important; pointer-events: none; }
         @keyframes popIn { 0% { opacity: 0; transform: translate(-50%, 15px); } 15% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -15px); } }
@@ -275,7 +276,48 @@
         .thinking-dots::after { content: '…'; display: inline-block; width: 1.2em; text-align: left; animation: dotsBlink 1s steps(4) infinite; overflow: hidden; vertical-align: bottom; }
         @keyframes dotsBlink { 0% { width: 0; } 100% { width: 1.2em; } }
         /* 結果画面では上のボタン類を隠す(タイトルに重なるため) */
-        body:has(#result-screen.active) #btn-sound, body:has(#result-screen.active) #btn-active-rules, body:has(#result-screen.active) #btn-show-rules, body:has(#result-screen.active) #game-room-code { display: none !important; }
+        body:has(#result-screen.active) #btn-active-rules, body:has(#result-screen.active) #btn-show-rules, body:has(#result-screen.active) #game-room-code { display: none !important; }
+        /* --- 相手の席の直下のステータス行(バッジと手番表示が場や他の表示に重ならない) --- */
+        #my-status-area { min-width: 196px; box-sizing: border-box; }
+        #status-row { pointer-events: none; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; padding: 2px 10px 0; min-height: 26px; position: relative; z-index: 25; flex-shrink: 0; }
+        #status-row #persistent-status-panel { position: static !important; transform: none !important; flex-direction: row !important; flex-wrap: wrap; gap: 4px !important; align-items: center !important; flex: 1 1 auto; min-width: 0; }
+        #status-row #game-round-badge { margin-bottom: 0 !important; font-size: 11px !important; padding: 2px 8px !important; }
+        #status-row .status-badge { font-size: 10px; padding: 2px 6px; white-space: nowrap; }
+        #status-row .turn-window { position: static !important; transform: none !important; flex-shrink: 1; max-width: 46%; padding: 3px 8px; border-radius: 8px; }
+        #status-row .turn-suffix { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        #status-row .turn-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #status-row .turn-text-container { flex-direction: row; align-items: baseline; gap: 2px; }
+        /* --- 「場のカードはずらせるよ」は自分の欄のすぐ上に(TIMEや自分の欄の裏に潜らない) --- */
+        #my-status-wrapper > #fan-hint { position: absolute; left: 0; bottom: calc(100% + 3px); top: auto; transform: none; z-index: 30; font-size: 10px; padding: 1px 8px; background: rgba(0,0,0,.65); }
+        body:has(#chat-expanded-area[style*="flex"]) #fan-hint { display: none !important; }
+        /* --- 席が画面幅に必ず収まる(5人戦・SEでも) --- */
+        .players-area { padding: 14px 6px 5px !important; gap: 3px !important; overflow-x: visible !important; justify-content: center !important; }
+        .players-area > :first-child, .players-area > :last-child { margin-left: 0 !important; margin-right: 0 !important; }
+        .players-area .player-status { flex: 1 1 0; min-width: 0 !important; max-width: 86px; box-sizing: border-box; }
+        .players-area .turn-arrow { margin: 0; font-size: 11px; flex-shrink: 0; align-self: center; }
+        .players-area .p-name { max-width: 100% !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* --- 結果画面: 中身が潰れない --- */
+        #result-list > * { flex-shrink: 0; }
+        /* --- 大貧民バッジを明るく --- */
+        .rank-badge-glow.rank-4 { opacity: 0.95 !important; background: #4a4a4a !important; color: #f0f0f0 !important; border: 1px solid #9a9a9a !important; }
+        /* --- ロビーの空白をなくす --- */
+        #lobby-screen { justify-content: flex-start !important; }
+        #lobby-screen > div:last-of-type { margin-top: auto !important; }
+        /* --- 小さい画面のログイン: タイトルが上のボタンに重ならない --- */
+        @media (max-height: 700px) { #login-screen h1 { margin-top: 76px !important; } }
+        #lobby-screen > h2 { margin-top: 46px !important; }
+        /* --- 「あなたの番です」は小さめ・短め(カードや制限時間を長く隠さない) --- */
+        #turn-popup-text { font-size: 26px !important; background: rgba(0,0,0,.58); padding: 6px 18px; border-radius: 16px; white-space: nowrap; pointer-events: none; }
+        /* --- スタンプの吹き出し: 白い丸 + 名前 --- */
+        .react-bubble.stamp { background: #fff; border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 3px 8px rgba(0,0,0,.5); filter: none; }
+        .react-bubble.stamp::after { content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+        .react-bubble .rb-name { position: absolute; left: 50%; top: auto; bottom: -10px; transform: translateX(-50%); margin: 0; font-size: 10px; font-weight: 900; color: #fff; background: rgba(0,0,0,.75); padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+        /* --- ルール画面の強さの並び --- */
+        .rule-strength { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 12px 0; }
+        .rule-strength .rs-label { display: flex; justify-content: space-between; width: 100%; max-width: 330px; font-size: 12px; font-weight: 900; }
+        .rule-strength .rule-cards .card { margin-left: -21px; }
+        .rule-strength .rule-cards .card:first-child { margin-left: 0; }
+        .rule-strength .rule-cards .card.joker-mini { color: var(--primary); font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
         #react-panel { position: fixed; left: 8px; right: 8px; z-index: 9400; background: rgba(20,30,25,.97); border: 2px solid #f1c40f; border-radius: 16px; padding: 10px; box-shadow: 0 -6px 24px rgba(0,0,0,.6); display: none; max-width: 520px; margin: 0 auto; }
         #react-panel.show { display: block; animation: reactIn .18s ease-out; } @keyframes reactIn { from { transform: translateY(12px); opacity: 0; } }
         #react-panel .rp-title { font-size: 11px; font-weight: 900; color: #f1c40f; margin: 2px 2px 6px; }
@@ -285,7 +327,6 @@
         #react-panel .rp-quick button { margin: 0; padding: 7px 10px; font-size: 13px; font-weight: 900; background: #fff; color: #222; border: 0; border-radius: 16px; box-shadow: 0 2px 0 rgba(0,0,0,.3); }
         #react-panel button:active { transform: scale(.92); }
         .react-bubble { position: fixed; z-index: 9300; pointer-events: none; transform: translate(-50%, -100%); animation: reactPop 2.4s ease-out forwards; white-space: nowrap; }
-        .react-bubble.stamp { font-size: 40px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
         .react-bubble.quick { background: #fff; color: #222; font-size: 13px; font-weight: 900; padding: 5px 10px; border-radius: 14px; box-shadow: 0 3px 8px rgba(0,0,0,.5); }
         .react-bubble.quick::after { content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
         @keyframes reactPop { 0% { opacity: 0; transform: translate(-50%, -60%) scale(.4); } 12% { opacity: 1; transform: translate(-50%, -110%) scale(1.15); } 22% { transform: translate(-50%, -100%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -150%); } }
@@ -296,7 +337,6 @@
         .hand-cards::-webkit-scrollbar { display: none; }
         .hand-cards .card { margin-left: -30px; flex-shrink: 0; } .hand-cards .card:first-child { margin-left: auto; } .hand-cards .card:last-child { margin-right: auto; }
         .hand-cards { justify-content: flex-start !important; }
-        .players-area { justify-content: flex-start !important; } .players-area > :first-child { margin-left: auto; } .players-area > :last-child { margin-right: auto; }
         .hand-cards .card:hover:not(.disabled-card) { transform: translateY(-5px); z-index: 50; }
         
         .switch { position: relative; display: inline-block; width: 64px; height: 32px; border-radius: 32px; overflow: hidden; }
@@ -383,8 +423,8 @@
                 <div class="glass-panel" style="padding: 15px; text-align: left;">
                     <h3 style="color:var(--accent); margin:0 0 8px 0; font-size: 18px; text-align: left; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:5px;">2. カードの強さ</h3>
                     <p style="margin:0 0 10px 0; font-size: 13px; line-height: 1.5; font-weight: bold;">数字の強さは一般的なゲームと異なり、<span style="color:#FF6B6B;">「2」が最強で「3」が最弱</span>です。<br><span style="font-size:11px; color:#ccc;">※ジョーカーは「2」よりも強い、唯一のワイルドカードです。</span></p>
-                    <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-weight: 900; color: #fff; font-size: 12px; margin: 12px 0;">
-                        <span style="color:#95a5a6;">(弱)</span>
+                    <div class="rule-strength">
+                        <div class="rs-label"><span style="color:#95a5a6;">◀ 弱い</span><span style="color:var(--primary);">強い ▶</span></div>
                         <div class="rule-cards" style="display:flex; justify-content:center; align-items:center;">
                             <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">3</span></div><span class="card-rank-center">3</span></div>
                             <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">4</span></div><span class="card-rank-center">4</span></div>
@@ -399,8 +439,8 @@
                             <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">K</span></div><span class="card-rank-center">K</span></div>
                             <div class="card black"><div class="card-top-left"><span class="card-tl-suit">♠</span><span class="card-tl-rank">A</span></div><span class="card-rank-center">A</span></div>
                             <div class="card black"><div class="card-top-left" style="color:var(--primary);"><span class="card-tl-suit">♠</span><span class="card-tl-rank">2</span></div><span class="card-rank-center" style="color:var(--primary);">2</span></div>
+                            <div class="card joker-mini">JOKER</div>
                         </div>
-                        <span style="color:var(--primary);">(強)</span>
                     </div>
                 </div>
                 <div class="glass-panel" style="padding: 15px; text-align: left;">
@@ -527,11 +567,12 @@
                     <div id="badge-rev" class="status-badge badge-rev">🔥 革命中！</div>
                     <div id="badge-jback" class="status-badge badge-jback">✨ Jバック中！</div>
                     <div id="badge-bind" class="status-badge badge-bind">🔗 マーク縛り: <span id="bind-suit-text"></span></div>
-                    <div id="badge-kaidan" class="status-badge badge-kaidan">📈 階段(数)縛り中！</div>
+                    <div id="badge-kaidan" class="status-badge badge-kaidan">📈 階段縛り中！</div>
                     <div id="badge-revdir" class="status-badge badge-revdir">🔄 逆回り</div>
                 </div>
 
                 <div class="players-area" id="players-area"></div>
+                <div id="status-row"></div>
                 
                 <div class="board-area">
                     <div class="played-cards-wrapper">
@@ -705,7 +746,7 @@ const DOM = { screens: { login: document.getElementById('login-screen'), lobby: 
 const UI = { switchScreen: (name) => { Object.values(DOM.screens).forEach(s => s.classList.remove('active')); DOM.screens[name].classList.add('active'); if (name === 'game') setTimeout(initLayout, 50); }, showActionAnim: (text) => { DOM.animText.innerText = text; DOM.animText.classList.remove('anim-pop'); void DOM.animText.offsetWidth; DOM.animText.classList.add('anim-pop'); } };
 
 window.showFullRuleDesc = function() { document.getElementById('full-rule-modal').classList.remove('hidden'); };
-function showCentralTurnPopup() { const p = document.getElementById('turn-popup-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); clearTimeout(window._turnPopT); window._turnPopT = setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 1000); }
+function showCentralTurnPopup() { const p = document.getElementById('turn-popup-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); clearTimeout(window._turnPopT); window._turnPopT = setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 900); }
 function showSpectatorNotify() { const p = document.getElementById('spectator-notify-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 3000); }
 function resolveUILayout() { initLayout(); }
 function formatTime(ts) { if(!ts) return "不明"; const d = new Date(ts * 1000); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
@@ -1007,7 +1048,7 @@ window.confirmHostSettings = function() { document.getElementById('host-settings
 
 window.openSettingTab = function(tabId) {
     let readOnly = window.isSettingsReadOnly; currentSettingsTab = tabId;
-    document.querySelectorAll('.tab-btn').forEach(btn => { btn.style.background = 'rgba(0,0,0,0.4)'; btn.style.color = '#888'; btn.style.transform = 'translateY(2px)'; btn.style.boxShadow = 'none'; });
+    document.querySelectorAll('.tab-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.08)'; btn.style.color = '#cfd8e3'; btn.style.transform = 'translateY(2px)'; btn.style.boxShadow = 'none'; });
     const activeBtn = document.getElementById('tab-btn-' + tabId); if(activeBtn) { activeBtn.style.background = 'var(--primary)'; activeBtn.style.color = '#fff'; activeBtn.style.transform = 'translateY(0)'; activeBtn.style.boxShadow = '0 -4px 10px rgba(255, 107, 107, 0.3)'; }
     const content = document.getElementById('settings-tab-content'); content.innerHTML = '';
     let keys = TABS[tabId]; let stateRef = isHost ? hostState : clientState; const ICON_MAP = { base: "🎭", special1: "✨", bind: "🔗", kinshi: "🚫" }; const tabIcon = ICON_MAP[tabId] || "⚙️";
@@ -1519,12 +1560,15 @@ function autoResolveInteraction(p) {
 }
 
 function showRankWinAnim(playerName, rank) {
-    const text = `${playerName} が\n${RANK_NAMES[rank]} で上がり!`; const el = document.createElement('div');
-    el.style.cssText = "position:absolute; top:35%; left:50%; transform:translate(-50%,-50%) scale(0); font-size:32px; font-weight:900; color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.8), 2px 2px 4px #000; z-index:7500; pointer-events:none; text-align:center; line-height:1.4; white-space:nowrap; background:rgba(0,0,0,0.92); padding:20px 40px; border-radius:24px; border:5px solid #fff; box-shadow:0 0 60px rgba(255,255,255,0.3), 0 15px 40px rgba(0,0,0,0.9);";
+    { const ph = (isHost && hostState) ? hostState.phase : clientState.phase; if (ph && ph !== 'PLAY' && ph !== 'RESULT') return; }
+    document.querySelectorAll('.rank-win-anim').forEach(x => x.remove());  // 連続で上がった時に重ならない
+    const nm = [...String(playerName)].length > 7 ? [...String(playerName)].slice(0, 6).join('') + '…' : playerName;
+    const text = `${nm} が ${RANK_NAMES[rank]} で上がり!`; const el = document.createElement('div'); el.className = 'rank-win-anim';
+    el.style.cssText = "position:absolute; top:46%; left:50%; box-sizing:border-box; transform:translate(-50%,-50%) scale(0); font-size:17px; font-weight:900; color:#fff; text-shadow:0 0 8px rgba(0,0,0,.9), 1px 1px 2px #000; z-index:4500; pointer-events:none; text-align:center; line-height:1.3; white-space:nowrap; background:rgba(0,0,0,0.62); padding:7px 14px; border-radius:20px; border:2px solid #fff; box-shadow:0 4px 14px rgba(0,0,0,0.4);";
     if(rank===0) el.style.borderColor = '#FFD700'; if(rank===1) el.style.borderColor = '#bdc3c7'; if(rank===3) el.style.borderColor = '#e67e22'; if(rank===4) { el.style.borderColor = '#c0392b'; el.style.color = '#ff7675'; }
-    el.style.whiteSpace = 'pre'; el.style.maxWidth = '94vw'; el.textContent = text; document.getElementById('game-container').appendChild(el);
+    el.style.whiteSpace = 'nowrap'; el.style.maxWidth = '94vw'; el.textContent = text; document.getElementById('game-container').appendChild(el);
     el.animate([{ transform: 'translate(-50%, -50%) scale(0) rotate(-5deg)', opacity: 0 }, { transform: 'translate(-50%, -50%) scale(1.1) rotate(2deg)', opacity: 1, offset: 0.6 }, { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 }], { duration: 600, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)', fill: 'forwards' });
-    setTimeout(() => { el.animate([ { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(1.3)', opacity: 0 } ], { duration: 400, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove(); }, 3500);
+    setTimeout(() => { el.animate([ { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(1.3)', opacity: 0 } ], { duration: 400, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove(); }, 1600);
 }
 
 function handleWin(i, last) {
@@ -1626,6 +1670,7 @@ function updateClientState(ns) {
         } else { if(clientTimerInterval) { clearInterval(clientTimerInterval); clientTimerInterval = null; } clientTimerActivePlayerId = null; }
     } else { if(clientTimerInterval) { clearInterval(clientTimerInterval); clientTimerInterval = null; } clientTimerActivePlayerId = null; }
 
+    if(ns.phase!=='PLAY' && ns.phase!=='RESULT') document.querySelectorAll('.rank-win-anim').forEach(x => x.remove());
     if(ns.phase==='LOBBY') { 
         if(['PLAY','EXCHANGE','RESULT'].includes(o)) enterLobby();
         const frag = document.createDocumentFragment();
@@ -1673,7 +1718,7 @@ function updateClientState(ns) {
             else { viewingPlayerId=null; requestAnimationFrame(renderGame); }
         } else { requestAnimationFrame(renderGame); }
     }
-    else if(ns.phase==='RESULT') { document.getElementById('global-turn-timer').classList.remove('show'); if(o!=='RESULT') { renderResult(); setTimeout(() => postGameOverIfFinal(ns), 1000); } }
+    else if(ns.phase==='RESULT') { document.getElementById('global-turn-timer').classList.remove('show'); document.getElementById('turn-status-window').classList.add('hidden'); if(o!=='RESULT') setTimeout(() => document.querySelectorAll('.rank-win-anim').forEach(x => x.remove()), 1200); if(o!=='RESULT') { renderResult(); setTimeout(() => postGameOverIfFinal(ns), 1000); } }
 }
 function postGameOverIfFinal(ns) {
     const isFinal = ns.rules.totalRounds && ns.rules.totalRounds !== 999 && ns.round >= ns.rules.totalRounds; if(!isFinal) return;
@@ -1931,7 +1976,7 @@ function renderGame() {
         else if (['finished', 'miyako', 'penalized'].includes(myP.status)) { myStatusText = '上がり'; myStatusColor = '#ddd'; } 
         else if (isTurn) { myStatusText = '考え中'; myStatusColor = '#ddd'; }
 
-        const statusTxtEl = myStatusArea.querySelector('.my-status-txt'); statusTxtEl.innerText = myStatusText; statusTxtEl.parentElement.style.color = myStatusColor; statusTxtEl.classList.toggle('thinking-dots', myStatusText === '考え中');
+        const statusTxtEl = myStatusArea.querySelector('.my-status-txt'); statusTxtEl.innerText = myStatusText; statusTxtEl.parentElement.style.color = myStatusColor; if (myStatusText === '考え中' && clientState.interaction && clientState.interaction.playerId === me.id) { statusTxtEl.innerText = '選択中…'; statusTxtEl.parentElement.style.color = '#00E5FF'; } else if (myStatusText === '考え中') { statusTxtEl.innerText = 'あなたの番！'; statusTxtEl.parentElement.style.color = '#00E5FF'; } statusTxtEl.classList.remove('thinking-dots');
         { const hc = myStatusArea.querySelector('.my-hand-count'); if (hc) { const n = (myP.hand && myP.hand.length) || myP.handCount || 0; hc.textContent = ['finished','miyako','penalized','abandoned'].includes(myP.status) ? '' : '🃏 ' + n; } }
         myStatusArea.style.display = 'flex';
     } else { myStatusArea.style.display = 'none'; }
@@ -1997,6 +2042,7 @@ function renderGame() {
                 if(selectedCards.includes(c.id)) selectedCards = selectedCards.filter(x=>x!==c.id);
                 else selectedCards.push(c.id);
                 requestAnimationFrame(renderGame); });
+            el.addEventListener('lostpointercapture', () => { if(el.dataset.startX !== undefined && el.dataset.startX !== 'undefined' && !el._ghost) { el.dataset.startX = undefined; el.dataset.isDragging = 'false'; endHandGesture(); } });
             el.addEventListener('pointercancel', () => { el.dataset.startX = undefined; el.dataset.isDragging = 'false'; el.classList.remove('flicking', 'flick-src'); el.style.transform = ''; if(el._ghost) { el._ghost.remove(); el._ghost = null; } endHandGesture(); });
         }
         handFrag.appendChild(el);
@@ -2049,10 +2095,13 @@ function reactAnchor(pid) {
 }
 function showReactionBubble(pid, kind, text) {
     const a = reactAnchor(pid); let x = window.innerWidth / 2, y = window.innerHeight / 2;
-    if (a && a.offsetParent !== null) { const r = a.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + 4; }
-    x = Math.max(40, Math.min(window.innerWidth - 40, x)); y = Math.max(60, y);
+    if (a && a.offsetParent !== null) { const r = a.getBoundingClientRect(); x = r.left + r.width / 2; y = pid === me.id ? r.top + 4 : r.top + r.height * 0.6; }  // 相手のは席の中に出す(上部のGRAVITYボタンに隠れない)
+    y = Math.max(160, y);
     const b = document.createElement('div'); b.className = 'react-bubble ' + kind; b.textContent = text; b.style.left = x + 'px'; b.style.top = y + 'px';
-    document.body.appendChild(b); setTimeout(() => b.remove(), 2500);
+    if (pid !== me.id) { const sp = (clientState.players || []).find(q => q.id === pid); if (sp) { const nm = document.createElement('span'); nm.className = 'rb-name'; nm.textContent = cleanName(sp.name); b.appendChild(nm); } }
+    document.body.appendChild(b);
+    { const w = Math.max(b.offsetWidth, (b.querySelector('.rb-name') || {}).offsetWidth || 0); const half = w / 2 + 6; b.style.left = Math.max(half, Math.min(window.innerWidth - half, x)) + 'px'; }  // 画面端で切れない
+    setTimeout(() => b.remove(), 2500);
     if (typeof sfx === 'function') sfx(kind === 'stamp' ? 990 : 740, 0.08, 'sine', 0.1);
 }
 function receiveReaction(fromId, msg) {
@@ -2067,6 +2116,11 @@ function sendReaction(k, i) {
     const list = k === 'q' ? QUICK : STAMPS; showReactionBubble(me.id, k === 'q' ? 'quick' : 'stamp', list[i]);
     if (k === 'q') appendChatMessage({ senderId: me.id, sender: me.name, text: list[i] });
 }
+(function layoutSetup() {
+    const row = document.getElementById('status-row'); const psp = document.getElementById('persistent-status-panel'); const tsw = document.getElementById('turn-status-window');
+    if (row && psp) row.appendChild(psp); if (row && tsw) row.appendChild(tsw);
+    const fh = document.getElementById('fan-hint'); const msw = document.getElementById('my-status-wrapper'); if (fh && msw) msw.appendChild(fh);
+})();
 (function reactPanelSetup() {
     const p = document.createElement('div'); p.id = 'react-panel';
     p.innerHTML = '<div class="rp-title">スタンプ</div><div class="rp-stamps"></div><div class="rp-title">クイックチャット</div><div class="rp-quick"></div>';
@@ -2077,7 +2131,20 @@ function sendReaction(k, i) {
     function open() { const cs = document.getElementById('chat-system'); const top = cs ? cs.getBoundingClientRect().top : window.innerHeight - 60; p.style.bottom = (window.innerHeight - top + 6) + 'px'; p.classList.add('show'); }
     const btn = document.getElementById('btn-react');
     if (btn) btn.addEventListener('click', e => { e.stopPropagation(); p.classList.contains('show') ? close() : open(); });
-    document.addEventListener('pointerdown', e => { if (p.classList.contains('show') && !p.contains(e.target) && e.target !== btn) close(); }, true);
+    document.addEventListener('pointerdown', e => {
+        if (p.classList.contains('show') && !p.contains(e.target) && e.target !== btn) {
+            close(); e.preventDefault(); e.stopPropagation();
+            // 閉じるための1タップ(同じ指の pointerup と その直後の click)だけを下のボタンに伝えない
+            const pid = e.pointerId; let ateUp = false;
+            const cleanup = () => { document.removeEventListener('pointerup', onUp, true); document.removeEventListener('pointercancel', onCancel, true); document.removeEventListener('click', onClick, true); document.removeEventListener('pointerdown', onNextDown, true); };
+            const onUp = ev => { if (ev.pointerId !== pid) return; ev.preventDefault(); ev.stopPropagation(); ateUp = true; setTimeout(cleanup, 350); };
+            const onCancel = ev => { if (ev.pointerId === pid) cleanup(); };
+            const onClick = ev => { if (!ateUp) return; ev.preventDefault(); ev.stopPropagation(); cleanup(); };
+            const onNextDown = ev => { if (ev.pointerId !== pid || ateUp) cleanup(); };
+            document.addEventListener('pointerup', onUp, true); document.addEventListener('pointercancel', onCancel, true); document.addEventListener('click', onClick, true);
+            setTimeout(() => document.addEventListener('pointerdown', onNextDown, true), 0);
+        }
+    }, true);
 })();
 function canFlickNow() { const cp = clientState.players[clientState.turnIdx]; return clientState.phase === 'PLAY' && !clientState.isDelaying && !clientState.interaction && cp && cp.id === me.id && myRole !== 'spectator' && viewingPlayerId === null; }
 DOM.btnPlay.onclick = () => { if(window.isProcessingClient || myRole === 'spectator') return; const m = clientState.players.find(p=>p.id===me.id); if(!m) return; const pC = m.hand.filter(c=>selectedCards.includes(c.id)); if(!validatePlay(pC, clientState)) { showToast(clientState.board.cards.length ? "場と同じ枚数・同じ形で、より強いカードを選んでね" : "同じ数字のペアか、同じマーク3枚以上の連番で出せるよ", true); return; } window.isProcessingClient = true; sendMsg({type:'ACTION', action:{type:'PLAY', cardIds:selectedCards, bindSuits:pC.map(c=>c.s).filter(s=>s!=='JOKER')}}); selectedCards=[]; setTimeout(() => { window.isProcessingClient = false; }, 300); };
@@ -2331,7 +2398,7 @@ function confetti(n = 40) {
 (function soundButton() {
     const b = document.createElement('button'); b.id = 'btn-sound'; const paint = () => { b.textContent = FX.on ? '🔊' : '🔇'; }; paint();
     b.onclick = () => { FX.on = !FX.on; try { localStorage.setItem('daifugo_sound', FX.on ? 'on' : 'off'); } catch(e) {} fxUnlock(); paint(); if(FX.on) SFX.play(); };
-    document.body.appendChild(b);
+    const host = document.getElementById('btn-show-rules'); (host && host.parentElement ? host.parentElement : document.body).appendChild(b);
 })();
 // ===== 称号・連勝記録 =====
 function getTitles(p) {
