@@ -238,6 +238,7 @@
         #fan-hint { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); font-size: 11px; font-weight: 900; color: rgba(255,255,255,.85); background: rgba(0,0,0,.45); padding: 2px 9px; border-radius: 10px; white-space: nowrap; pointer-events: none; display: none; z-index: 6; }
         #btn-board-reset { position: absolute; right: 6px; top: 4px; z-index: 60; margin: 0; padding: 3px 10px; font-size: 12px; border-radius: 12px; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.5); box-shadow: none; display: none; }
         .hand-cards { touch-action: pan-x; }
+        input[type=text], input:not([type]), textarea { font-size: 16px !important; }  /* iOSは16px未満の入力欄を触ると画面を拡大してしまう */
         .hand-cards .card.flicking { transition: none !important; z-index: 200 !important; }
         .card.history-gray { background: #ced6e0 !important; border-color: #a4b0be !important; }
 
@@ -2291,7 +2292,7 @@ function renderBoardStack() {
 }
 function applyBoardTransforms() {
     const hasPrev = DOM.historyCards.children.length > 0 && DOM.boardCards.children.length > 0;
-    const baseNew = hasPrev ? 30 : 0, baseOld = hasPrev ? -34 : 0;  // 前のカードは上、今のカードは下(スートが縦に揃う)
+    const baseNew = hasPrev ? 10 : 0, baseOld = hasPrev ? -34 : 0;  // 前のカードは上、今のカードは下(スートが縦に揃う)
     [...DOM.historyCards.children].forEach(g => { const o = boardOffsets[g.dataset.layerKey] || { dx: 0, dy: 0 }; g.style.transform = `translate(calc(-50% + ${o.dx}px), calc(-50% + ${baseOld + o.dy}px))`; g.classList.toggle('moved', !!(o.dx || o.dy)); });
     const o = boardOffsets[DOM.boardCards.dataset.layerKey] || { dx: 0, dy: 0 };
     DOM.boardCards.style.transform = `translate(calc(-50% + ${o.dx}px), calc(-50% + ${baseNew + o.dy}px))`; DOM.boardCards.classList.toggle('moved', !!(o.dx || o.dy));
