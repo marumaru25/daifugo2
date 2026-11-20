@@ -189,7 +189,7 @@
         .cutin small { display: block; font-size: 15px; letter-spacing: 1px; margin-top: 2px; opacity: .9; }
         @keyframes cutinSlash { 0% { transform: translateX(110%) skewX(-20deg); } 18% { transform: translateX(0) skewX(-8deg); } 80% { transform: translateX(0) skewX(-8deg) scale(1.04); opacity: 1; } 100% { transform: translateX(-110%) skewX(-20deg); opacity: 0; } }
         .shake { animation: screenShake .45s; } @keyframes screenShake { 0%,100% { transform: translate(0,0); } 20% { transform: translate(-6px,3px); } 40% { transform: translate(5px,-4px); } 60% { transform: translate(-4px,2px); } 80% { transform: translate(3px,-2px); } }
-        .confetti { position: fixed; top: -12px; width: 9px; height: 14px; z-index: 9000; pointer-events: none; border-radius: 2px; animation: confettiFall linear forwards; }
+        .confetti { position: fixed; top: -12px; width: 9px; height: 14px; z-index: 1500; pointer-events: none; border-radius: 2px; animation: confettiFall linear forwards; }
         @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: .8; } }
         .result-hero { text-align: center; margin: 2px 0 10px; padding: 10px; border-radius: 14px; background: radial-gradient(circle at 50% 30%, rgba(255,215,0,.35), rgba(0,0,0,.5)); border: 2px solid #FFD700; box-shadow: 0 0 25px rgba(255,215,0,.35); }
         .result-hero img { width: 64px; height: 64px; border-radius: 50%; border: 3px solid #FFD700; background: #fff; object-fit: cover; }
@@ -238,6 +238,8 @@
         #fan-hint { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); font-size: 11px; font-weight: 900; color: rgba(255,255,255,.85); background: rgba(0,0,0,.45); padding: 2px 9px; border-radius: 10px; white-space: nowrap; pointer-events: none; display: none; z-index: 6; }
         #btn-board-reset { position: absolute; right: 6px; top: 4px; z-index: 60; margin: 0; padding: 3px 10px; font-size: 12px; border-radius: 12px; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.5); box-shadow: none; display: none; }
         .hand-cards { touch-action: pan-x; }
+        .hand-cards .card.ex-new { border: 3px solid #7CFFB2 !important; transform: translateY(-10px); animation: exGlow .45s ease-in-out infinite alternate; }  /* 交換でもらったカード */
+        @keyframes exGlow { from { box-shadow: 0 0 8px 3px rgba(124,255,178,.75); } to { box-shadow: 0 0 22px 9px rgba(124,255,178,1); } }
         input[type=text], input:not([type]), textarea { font-size: 16px !important; }  /* iOSは16px未満の入力欄を触ると画面を拡大してしまう */
         .hand-cards .card.flicking { transition: none !important; z-index: 200 !important; }
         .card.history-gray { background: #ced6e0 !important; border-color: #a4b0be !important; }
@@ -328,6 +330,8 @@
         #react-panel .rp-quick button { margin: 0; padding: 7px 10px; font-size: 13px; font-weight: 900; background: #fff; color: #222; border: 0; border-radius: 16px; box-shadow: 0 2px 0 rgba(0,0,0,.3); }
         #react-panel button:active { transform: scale(.92); }
         .react-bubble { position: fixed; z-index: 9300; pointer-events: none; transform: translate(-50%, -100%); animation: reactPop 2.4s ease-out forwards; white-space: nowrap; }
+        .react-bubble.stamp.mine { width: 42px; height: 42px; font-size: 25px; }
+        .react-bubble.quick.mine { font-size: 12px; padding: 4px 8px; }
         .react-bubble.quick { background: #fff; color: #222; font-size: 13px; font-weight: 900; padding: 5px 10px; border-radius: 14px; box-shadow: 0 3px 8px rgba(0,0,0,.5); }
         .react-bubble.quick::after { content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
         @keyframes reactPop { 0% { opacity: 0; transform: translate(-50%, -60%) scale(.4); } 12% { opacity: 1; transform: translate(-50%, -110%) scale(1.15); } 22% { transform: translate(-50%, -100%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -150%); } }
@@ -356,6 +360,16 @@
         #chat-messages::-webkit-scrollbar { width: 6px; } #chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
         #settings-tab-content::-webkit-scrollbar { width: 8px; } #settings-tab-content::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
         
+        #login-screen { justify-content: flex-start; padding-top: 60px; }  /* 上の📖🃏🔊とタイトルが重ならない */
+        #login-screen h1 { margin-top: 0 !important; }
+        @media (max-height: 700px) { #login-screen { padding-top: 54px; gap: 6px; } #login-screen h1 { font-size: 2.4rem !important; margin-bottom: 0 !important; } }
+        #result-screen { justify-content: flex-start; padding-top: 58px; }
+        #result-list { min-height: 0; flex: 0 1 auto; }
+        .result-hero { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 10px; padding: 6px 10px; margin: 0 0 4px; }
+        .result-hero img { width: 42px; height: 42px; border-width: 2px; }
+        .result-hero .hero-name { font-size: 18px; margin-top: 0; }
+        .result-hero .title-chips { flex-basis: 100%; }
+        .share-hint { margin-top: 2px; }
         #result-list { width: 95%; max-width: 450px; display:flex; flex-direction:column; gap:4px; padding: 10px; margin-top: 0; box-sizing: border-box; overflow: hidden; }
 
         .setting-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.1); padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.1s, background 0.2s; margin-bottom: 10px; cursor: pointer; }
@@ -773,7 +787,7 @@ async function initGame() {
                 window.AgentSDK.room.join({ room_id: rm.room_id }).catch(()=>{});
                 const meP = hostState.players.find(x=>x.id===me.id); if(meP) { meP.disconnected = false; }
                 hostState.isDelaying = false; hostState.players.forEach(x => { x._dcBusyUntil = 0; x._cpuPlayId = 0; });
-                if(hostState.phase === 'EXCHANGE' && !hostState.exchange) { hostState.phase = 'PLAY'; determineFirstPlayer(); }
+                if(hostState.phase === 'EXCHANGE' && !hostState.exchange) { hostState.players.forEach(p => (p.hand||[]).forEach(c => { delete c.ex; })); hostState.phase = 'PLAY'; determineFirstPlayer(); }
                 if(hostState.phase === 'LOBBY') enterLobby(); else startHostTimer();
                 broadcastState(); sendMsg({type:'CHAT', senderId:'system', sender:'SYSTEM', text:'👑 ホストが復帰しました'});
                 if(hostState.phase === 'PLAY') { if(hostState.interaction) triggerNextInteraction(); else { const cp = hostState.players[hostState.turnIdx]; if(cp && cp.isCpu) playCPU(hostState.turnIdx); } }
@@ -1052,7 +1066,7 @@ window.openSettingTab = function(tabId) {
     document.querySelectorAll('.tab-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.08)'; btn.style.color = '#cfd8e3'; btn.style.transform = 'translateY(2px)'; btn.style.boxShadow = 'none'; });
     const activeBtn = document.getElementById('tab-btn-' + tabId); if(activeBtn) { activeBtn.style.background = 'var(--primary)'; activeBtn.style.color = '#fff'; activeBtn.style.transform = 'translateY(0)'; activeBtn.style.boxShadow = '0 -4px 10px rgba(255, 107, 107, 0.3)'; }
     const content = document.getElementById('settings-tab-content'); content.innerHTML = '';
-    let keys = TABS[tabId]; let stateRef = isHost ? hostState : clientState; const ICON_MAP = { base: "🎭", special1: "✨", bind: "🔗", kinshi: "🚫" }; const tabIcon = ICON_MAP[tabId] || "⚙️";
+    let keys = TABS[tabId]; let stateRef = isHost ? hostState : clientState; const ICON_MAP = { base: "🎭", special1: "✨", bind: "🔗", kinshi: "🚫" }; const tabIcon = ICON_MAP[tabId] || "⚙️"; const RULE_ICON = { totalRounds:"🔁", cardExchange:"🔄", miyakoOchi:"🏯", gekokujo:"⚡", eightGiri:"✂️", sevenPass:"🎁", tenDiscard:"🗑️", jBack:"↩️", fiveSkip:"⏭️", nineReverse:"🔃", twelveBomber:"💣", spade3:"♠️", revolution:"🔥", suitBind:"🔗", kaidanBind:"📈" };  // 項目ごとのアイコン
     keys.forEach(k => {
         if(k === 'totalRounds') {
             const currentVal = stateRef.rules[k] || 3;
@@ -1060,12 +1074,12 @@ window.openSettingTab = function(tabId) {
                 : `<select onchange="window.updateRuleHost('${k}', this.value)" style="background:rgba(0,0,0,0.7); color:white; border:2px solid var(--accent); padding: 6px 10px; border-radius: 8px; outline:none; font-weight:bold; font-size: 14px; cursor: pointer; max-width: 100px;">
                     <option value="1" ${currentVal==1?'selected':''}>1</option><option value="2" ${currentVal==2?'selected':''}>2</option><option value="3" ${currentVal==3?'selected':''}>3</option><option value="4" ${currentVal==4?'selected':''}>4</option><option value="5" ${currentVal==5?'selected':''}>5</option><option value="10" ${currentVal==10?'selected':''}>10</option><option value="999" ${currentVal==999?'selected':''}>無制限</option>
                    </select>`;
-            content.innerHTML += `<div class="setting-row"><div class="setting-info"><div class="setting-icon">${tabIcon}</div><div class="setting-name">${RULE_LABELS[k]}</div><div class="setting-desc-btn" onclick="window.showRuleDescInModal('${k}'); event.stopPropagation();">?</div></div>${selectHtml}</div>`;
+            content.innerHTML += `<div class="setting-row"><div class="setting-info"><div class="setting-icon">${RULE_ICON[k] || tabIcon}</div><div class="setting-name">${RULE_LABELS[k]}</div><div class="setting-desc-btn" onclick="window.showRuleDescInModal('${k}'); event.stopPropagation();">?</div></div>${selectHtml}</div>`;
         } else {
             const isO = stateRef.rules[k];
             let controlHtml = readOnly ? `<span style="color:${isO?'#2ecc71':'#e74c3c'}; font-size:16px; font-weight:900; background:rgba(0,0,0,0.6); padding:6px 14px; border-radius:14px; border:1px solid ${isO?'#2ecc71':'#e74c3c'}; box-shadow:0 2px 4px rgba(0,0,0,0.5);">${isO?'ON':'OFF'}</span>`
                 : `<label class="switch" style="flex-shrink:0; pointer-events:auto;" onclick="event.stopPropagation()"><input type="checkbox" ${isO?'checked':''} onchange="window.toggleRuleHost('${k}')"><span class="slider"></span></label>`;
-            content.innerHTML += `<div class="setting-row" onclick="window.toggleRuleHostWrapper('${k}', event)"><div class="setting-info"><div class="setting-icon">${tabIcon}</div><div class="setting-name">${RULE_LABELS[k]}</div><div class="setting-desc-btn" onclick="window.showRuleDescInModal('${k}'); event.stopPropagation();">?</div></div>${controlHtml}</div>`;
+            content.innerHTML += `<div class="setting-row" onclick="window.toggleRuleHostWrapper('${k}', event)"><div class="setting-info"><div class="setting-icon">${RULE_ICON[k] || tabIcon}</div><div class="setting-name">${RULE_LABELS[k]}</div><div class="setting-desc-btn" onclick="window.showRuleDescInModal('${k}'); event.stopPropagation();">?</div></div>${controlHtml}</div>`;
         }
     });
 };
@@ -1185,7 +1199,7 @@ function hasExchangePairs(players) { const playingPlayers = players.filter(p=>p.
 function initExchange() {
     hostState.exchange = { pending: {}, offers: {}, targets: {}, timeLeft: 30 }; const pl = hostState.players.filter(p=>p.role!=='spectator' && p.status!=='abandoned');
     const d = pl.find(p=>p.lastRank===4), df = pl.find(p=>p.lastRank===0), h = pl.find(p=>p.lastRank===3), f = pl.find(p=>p.lastRank===1); let hasEx = false;
-    const takeStrongest = (pp, n) => { const s = [...pp.hand].sort((a,b)=>getBaseStr(b)-getBaseStr(a)).slice(0,n); pp.hand = pp.hand.filter(c=>!s.includes(c)); return s; };
+    const takeStrongest = (pp, n) => { const s = [...pp.hand].sort((a,b)=>getBaseStr(b)-getBaseStr(a)).slice(0,n); pp.hand = pp.hand.filter(c=>!s.includes(c)); s.forEach(c => c.ex = 1); return s; };  // ex=もらったカード(光らせる)
     // 貧民側は最強カードを自動で渡し、富豪側は「受け取ってから」返すカードを選ぶ
     if(d && df) { hasEx=true; df.hand.push(...takeStrongest(d,2)); df.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)); hostState.exchange.pending[df.id] = {count:2, target:d.id}; hostState.exchange.targets[df.id] = d.id; }
     if(h && f) { hasEx=true; f.hand.push(...takeStrongest(h,1)); f.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)); hostState.exchange.pending[f.id] = {count:1, target:h.id}; hostState.exchange.targets[f.id] = h.id; }
@@ -1203,11 +1217,12 @@ function checkExchangeComplete() {
     const ex = hostState.exchange;
     Object.entries(ex.targets).forEach(([richId, poorId]) => {
         const rich = hostState.players.find(p=>p.id===richId), poor = hostState.players.find(p=>p.id===poorId); const cards = ex.offers[richId] || [];
-        if(poor && poor.status !== 'abandoned') poor.hand.push(...cards); else if(rich && rich.status !== 'abandoned') rich.hand.push(...cards); // 相手が抜けていたら返却
+        if(poor && poor.status !== 'abandoned') { cards.forEach(c => c.ex = 1); poor.hand.push(...cards); } else if(rich && rich.status !== 'abandoned') { cards.forEach(c => delete c.ex); rich.hand.push(...cards); } // 相手が抜けていたら返却
     });
     hostState.players.forEach(p => p.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)));
-    hostState.exchange = null; sendMsg({type:'ANIM', text:"🔄 カード交換完了！"});
-    setTimeout(() => { if(!hostState || hostState.phase !== 'EXCHANGE') return; hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); }, 2000);
+    hostState.exchange = null; sendMsg({type:'ANIM', text:"🔄 交換完了！ 光ってるのがもらったカード"}); broadcastState();
+    // もらったカードを光らせて1.5秒見せてから、ラウンド開始
+    setTimeout(() => { if(!hostState || hostState.phase !== 'EXCHANGE') return; hostState.players.forEach(p => (p.hand||[]).forEach(c => { delete c.ex; })); hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); }, 1500);
 }
 
 function startHostGame() {
@@ -1647,10 +1662,10 @@ function enterLobby() {
     if(scEl) { const sc = isHost ? (hostState && hostState.shortCode) : (roomCodeMap[currentRoomId] || (clientState && clientState.shortCode)); if(sc) scEl.innerText = sc; }
     const cToggle = document.getElementById('lobby-cpu-toggle'); const cDiff = document.getElementById('lobby-cpu-diff');
     if(isHost) { 
-        cToggle.disabled = false; cDiff.disabled = false; document.getElementById('btn-start-game').classList.remove('hidden'); document.getElementById('btn-open-settings').classList.remove('hidden'); document.getElementById('non-host-status-box').classList.add('hidden'); document.getElementById('host-msg').innerText="👑 あなたがオーナーです。開始ボタンを押してください。"; 
+        cToggle.disabled = false; cDiff.disabled = false; document.getElementById('btn-start-game').classList.remove('hidden'); document.getElementById('btn-open-settings').classList.remove('hidden'); document.getElementById('non-host-status-box').classList.add('hidden'); document.getElementById('host-msg').innerText="👑 準備OKなら開始！"; 
         if(lobbySyncInterval) clearInterval(lobbySyncInterval); lobbySyncInterval = setInterval(() => { if(hostState && hostState.phase === 'LOBBY') broadcastState(); else clearInterval(lobbySyncInterval); }, 3000);
     } else { 
-        cToggle.disabled = true; cDiff.disabled = true; document.getElementById('btn-start-game').classList.add('hidden'); document.getElementById('btn-open-settings').classList.add('hidden'); document.getElementById('non-host-status-box').classList.remove('hidden'); document.getElementById('host-msg').innerText="⏳ ホストがゲームを開始するのを待っています..."; 
+        cToggle.disabled = true; cDiff.disabled = true; document.getElementById('btn-start-game').classList.add('hidden'); document.getElementById('btn-open-settings').classList.add('hidden'); document.getElementById('non-host-status-box').classList.remove('hidden'); document.getElementById('host-msg').innerText="⏳ ホストの開始を待っています…"; 
     }
 }
 
@@ -1711,7 +1726,7 @@ function updateClientState(ns) {
             UI.switchScreen('game'); selectedCards=[]; prevBoardCardIds=[]; window.isProcessingClient=false;
             const _myRole2 = (ns.players.find(p=>p.id===me.id)||{}).role;
             if(_myRole2 === 'spectator') { viewingPlayerId=null; _showSpectatorPick(ns); }
-            else { viewingPlayerId=null; UI.showActionAnim("🔄 カード交換..."); requestAnimationFrame(renderGame); }
+            else { viewingPlayerId=null; if(ns.exchange) UI.showActionAnim("🔄 カード交換..."); requestAnimationFrame(renderGame); }
         } else { requestAnimationFrame(renderGame); }
     }
     else if(ns.phase==='PLAY') {
@@ -1855,7 +1870,7 @@ function renderGame() {
     const handAreaEl = document.getElementById('hand-area-container'); if(myTurn || isMyInteract || myPending) handAreaEl.classList.add('active-turn'); else handAreaEl.classList.remove('active-turn');
 
     const tsw = document.getElementById('turn-status-window'), tswName = document.getElementById('tsw-name'), tswText = document.getElementById('tsw-text');
-    if(clientState.phase === 'EXCHANGE') { tsw.classList.remove('hidden'); tsw.classList.remove('my-turn'); tswName.innerText = myPending ? "カード選択中" : "待機中"; tswText.innerText = myPending ? "不要なカードを選んでください" : "上位者がカードを選んでいます"; }
+    if(clientState.phase === 'EXCHANGE') { tsw.classList.remove('hidden'); tsw.classList.remove('my-turn'); const _exDone = !clientState.exchange; tswName.innerText = myPending ? "カード選択中" : (_exDone ? "交換完了" : "待機中"); tswText.innerText = myPending ? "不要なカードを選んでください" : (_exDone ? "まもなく開始" : "上位者がカードを選んでいます"); }
     else if(isMyInteract) { tsw.classList.remove('hidden'); tsw.classList.add('my-turn'); tswName.innerText = "指示待機"; tswText.innerText = "カードまたは数字を選んでください"; }
     else if(clientState.isDelaying) { tsw.classList.remove('hidden'); tsw.classList.remove('my-turn'); tswName.innerText = "場を流しています"; tswText.innerText = clientState.board.cards.some(c=>c.r===8) ? "✂️ 8切り！" : "🧹 全員パス"; }
     else if(clientState.phase === 'PLAY') {
@@ -1998,7 +2013,7 @@ function renderGame() {
 
     const handFrag = document.createDocumentFragment();
     targetHand.forEach(c=>{
-        let el = createCardUI(c); const isSel = selectedCards.includes(c.id); if(isSel) el.classList.add('selected');
+        let el = createCardUI(c); const isSel = selectedCards.includes(c.id); if(isSel) el.classList.add('selected'); if(c.ex) el.classList.add('ex-new');
         if(isViewingOther || isSpec || isFinished) { el.classList.add('disabled-card'); el.style.pointerEvents = 'none'; }
         else if(myPending || (isMyInteract && clientState.phase === 'PLAY')) { } 
         else if(myTurn && clientState.phase === 'PLAY' && !clientState.isDelaying) { 
@@ -2052,6 +2067,7 @@ function renderGame() {
         handFrag.appendChild(el);
     });
     DOM.myHand.innerHTML=''; DOM.myHand.appendChild(handFrag);
+    if(clientState.phase === 'EXCHANGE' && !clientState.exchange) { const g = DOM.myHand.querySelectorAll('.card.ex-new'); if(g.length) { const sc = DOM.myHand, o = sc.getBoundingClientRect().left - sc.scrollLeft; const a = g[0].getBoundingClientRect().left - o, z = g[g.length-1].getBoundingClientRect().right - o; sc.scrollLeft = Math.max(0, (a + z) / 2 - sc.clientWidth / 2); } }
 
     const _selObjs = (targetHand||[]).filter(c=>selectedCards.includes(c.id));
     DOM.btnPlay.disabled = !myTurn || selectedCards.length === 0 || !validatePlay(_selObjs, clientState) || clientState.isDelaying || clientState.phase !== 'PLAY' || isSpec || isFinished || isViewingOther;
@@ -2099,10 +2115,11 @@ function reactAnchor(pid) {
 }
 function showReactionBubble(pid, kind, text) {
     const a = reactAnchor(pid); let x = window.innerWidth / 2, y = window.innerHeight / 2;
-    if (a && a.offsetParent !== null) { const r = a.getBoundingClientRect(); x = r.left + r.width / 2; y = pid === me.id ? r.top + 4 : r.top + r.height * 0.6; }  // 相手のは席の中に出す(上部のGRAVITYボタンに隠れない)
+    const mine = pid === me.id;
+    if (a && a.offsetParent !== null) { const r = a.getBoundingClientRect(); x = mine ? r.right - 30 : r.left + r.width / 2; y = mine ? r.top + 14 : r.top + r.height * 0.42; }  // 相手のは席のアイコンの上(名前は隠さない)、自分のは自分の枠の右上に小さく
     y = Math.max(160, y);
-    const b = document.createElement('div'); b.className = 'react-bubble ' + kind; b.textContent = text; b.style.left = x + 'px'; b.style.top = y + 'px';
-    if (pid !== me.id) { const sp = (clientState.players || []).find(q => q.id === pid); if (sp) { const nm = document.createElement('span'); nm.className = 'rb-name'; nm.textContent = cleanName(sp.name); b.appendChild(nm); } }
+    const b = document.createElement('div'); b.className = 'react-bubble ' + kind + (mine ? ' mine' : ''); b.textContent = text; b.style.left = x + 'px'; b.style.top = y + 'px';
+    if (pid !== me.id && !(a && a.offsetParent !== null)) { const sp = (clientState.players || []).find(q => q.id === pid); if (sp) { const nm = document.createElement('span'); nm.className = 'rb-name'; nm.textContent = cleanName(sp.name); b.appendChild(nm); } }
     document.body.appendChild(b);
     { const w = Math.max(b.offsetWidth, (b.querySelector('.rb-name') || {}).offsetWidth || 0); const half = w / 2 + 6; b.style.left = Math.max(half, Math.min(window.innerWidth - half, x)) + 'px'; }  // 画面端で切れない
     setTimeout(() => b.remove(), 2500);
@@ -2157,7 +2174,7 @@ function renderResult() {
     UI.switchScreen('result'); const l = document.getElementById('result-list'); const frag = document.createDocumentFragment();
     const isFinal = clientState.rules.totalRounds && clientState.rules.totalRounds !== 999 && clientState.round >= clientState.rules.totalRounds;
 
-    const mainTitle = document.createElement('h2'); mainTitle.innerText = isFinal ? `🌟 最終ゲーム結果 🌟` : `Round ${clientState.round} 結果`; mainTitle.style.cssText = "color: var(--accent); font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 2px; margin: 0 0 10px 0; text-align: center; text-shadow: 1px 1px 0 #000;"; frag.appendChild(mainTitle);
+    const mainTitle = document.createElement('h2'); mainTitle.innerText = isFinal ? `🌟 最終ゲーム結果 🌟` : `Round ${clientState.round} 結果`; mainTitle.style.cssText = "color: var(--accent); font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 2px; margin: 0 0 6px 0; text-align: center; text-shadow: 1px 1px 0 #000;"; frag.appendChild(mainTitle);
 
     let playingPlayers = clientState.players.filter(p=>p.role!=='spectator' && p.status !== 'abandoned');
     const myStats = updateMyStats(clientState);
@@ -2180,8 +2197,8 @@ function renderResult() {
 
     if(isFinal) {
         [...playingPlayers].sort((a,b)=>b.score - a.score).forEach((p,i)=>{
-            const div = document.createElement('div'); let customStyle = "padding: 6px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 3px;";
-            if(i === 0) customStyle += " border: 2px solid #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1)); color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); transform: scale(1.05); margin: 8px 0;"; else customStyle += " border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff;";
+            const div = document.createElement('div'); let customStyle = "padding: 3px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 0;";
+            if(i === 0) customStyle += " border: 2px solid #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1)); color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); transform: scale(1.03); margin: 2px 0;"; else customStyle += " border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff;";
             div.style.cssText = customStyle;
             div.innerHTML = `<div style="display:flex; align-items:center; gap:6px;"><span style="font-size: 16px;">${i===0?'🏆':i===1?'🥈':i===2?'🥉':'👤'}</span><div style="display:flex; flex-direction:column; line-height:1.1;"><span style="font-size:14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px;">${escapeHTML(p.name)}</span></div></div><div style="font-size: 16px; text-align:right; color: var(--accent);">${p.score} <span style="font-size:10px; color:#ccc;">pt</span></div>`;
             frag.appendChild(div);
@@ -2189,7 +2206,7 @@ function renderResult() {
     } else {
         [...playingPlayers].sort((a,b)=>a.rank-b.rank).forEach((p,i)=>{ 
             let t=""; if(p.status==='miyako') t=" <span style='font-size:10px; color:#ff7675; font-weight:900;'><br>(🏯 都落ち)</span>"; if(p.status==='penalized') t=` <span style='font-size:10px; color:#ff7675; font-weight:900;'><br>(❌ ${p.penReason || "反則"})</span>`; 
-            const div = document.createElement('div'); let customStyle = "padding: 6px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 3px;";
+            const div = document.createElement('div'); let customStyle = "padding: 3px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 0;";
             if(p.rank === 0) customStyle += " border: 1px solid #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05)); color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);"; else if(p.rank === 4) customStyle += " border: 1px dashed #7f8c8d; background: rgba(0,0,0,0.7); color: #95a5a6; filter: grayscale(50%);"; else customStyle += " border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff;";
             div.style.cssText = customStyle;
             let rankIcon = p.rank === 0 ? "👑" : (p.rank === 4 ? "💀" : "👤"); let pts = RANK_SCORES[p.rank] || 0; let ptsStr = pts > 0 ? `+${pts}` : pts; let ptsColor = pts > 0 ? '#2ecc71' : (pts < 0 ? '#e74c3c' : '#bdc3c7');
