@@ -762,7 +762,8 @@ const UI = { switchScreen: (name) => { Object.values(DOM.screens).forEach(s => s
 
 window.showFullRuleDesc = function() { document.getElementById('full-rule-modal').classList.remove('hidden'); };
 function showCentralTurnPopup() { const p = document.getElementById('turn-popup-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); clearTimeout(window._turnPopT); window._turnPopT = setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 900); }
-function showSpectatorNotify() { const p = document.getElementById('spectator-notify-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 3000); }
+function showSpectatorNotify(w) { w = w || 0; if (document.querySelector('.rank-win-anim') && w < 15) { setTimeout(() => showSpectatorNotify(w + 1), 200); return; }  // 上がりの帯と重ならない
+    const p = document.getElementById('spectator-notify-text'); p.classList.remove('hidden'); void p.offsetWidth; p.classList.add('show'); setTimeout(() => { p.classList.remove('show'); setTimeout(() => p.classList.add('hidden'), 200); }, 3000); }
 function resolveUILayout() { initLayout(); }
 function formatTime(ts) { if(!ts) return "不明"; const d = new Date(ts * 1000); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
@@ -1199,10 +1200,9 @@ function hasExchangePairs(players) { const playingPlayers = players.filter(p=>p.
 function initExchange() {
     hostState.exchange = { pending: {}, offers: {}, targets: {}, timeLeft: 30 }; const pl = hostState.players.filter(p=>p.role!=='spectator' && p.status!=='abandoned');
     const d = pl.find(p=>p.lastRank===4), df = pl.find(p=>p.lastRank===0), h = pl.find(p=>p.lastRank===3), f = pl.find(p=>p.lastRank===1); let hasEx = false;
-    const takeStrongest = (pp, n) => { const s = [...pp.hand].sort((a,b)=>getBaseStr(b)-getBaseStr(a)).slice(0,n); pp.hand = pp.hand.filter(c=>!s.includes(c)); s.forEach(c => c.ex = 1); return s; };  // ex=もらったカード(光らせる)
-    // 貧民側は最強カードを自動で渡し、富豪側は「受け取ってから」返すカードを選ぶ
-    if(d && df) { hasEx=true; df.hand.push(...takeStrongest(d,2)); df.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)); hostState.exchange.pending[df.id] = {count:2, target:d.id}; hostState.exchange.targets[df.id] = d.id; }
-    if(h && f) { hasEx=true; f.hand.push(...takeStrongest(h,1)); f.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)); hostState.exchange.pending[f.id] = {count:1, target:h.id}; hostState.exchange.targets[f.id] = h.id; }
+    // 貧民側の最強カードと富豪側が選んだカードは、富豪側が決めた時点で同時に交換する
+    if(d && df) { hasEx=true; hostState.exchange.pending[df.id] = {count:2, target:d.id}; hostState.exchange.targets[df.id] = d.id; }
+    if(h && f) { hasEx=true; hostState.exchange.pending[f.id] = {count:1, target:h.id}; hostState.exchange.targets[f.id] = h.id; }
     if(!hasEx) { hostState.exchange = null; hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); return; }
     Object.keys(hostState.exchange.pending).forEach(uid => { const p = pl.find(x=>x.id===uid); if(p && p.isCpu) exchangeAutoGive(p); });
     checkExchangeComplete();
@@ -1217,10 +1217,11 @@ function checkExchangeComplete() {
     const ex = hostState.exchange;
     Object.entries(ex.targets).forEach(([richId, poorId]) => {
         const rich = hostState.players.find(p=>p.id===richId), poor = hostState.players.find(p=>p.id===poorId); const cards = ex.offers[richId] || [];
+        if(poor && poor.status !== 'abandoned' && rich && rich.status !== 'abandoned') { const n = cards.length; const up = [...poor.hand].sort((a,b)=>getBaseStr(b)-getBaseStr(a)).slice(0, n); poor.hand = poor.hand.filter(c => !up.includes(c)); up.forEach(c => c.ex = 1); rich.hand.push(...up); }  // ex=もらったカード(光らせる)
         if(poor && poor.status !== 'abandoned') { cards.forEach(c => c.ex = 1); poor.hand.push(...cards); } else if(rich && rich.status !== 'abandoned') { cards.forEach(c => delete c.ex); rich.hand.push(...cards); } // 相手が抜けていたら返却
     });
     hostState.players.forEach(p => p.hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)));
-    hostState.exchange = null; sendMsg({type:'ANIM', text:"🔄 交換完了！ 光ってるのがもらったカード"}); broadcastState();
+    hostState.exchange = null; sendMsg({type:'ANIM', text:"🔄 交換完了！"}); broadcastState();
     // もらったカードを光らせて1.5秒見せてから、ラウンド開始
     setTimeout(() => { if(!hostState || hostState.phase !== 'EXCHANGE') return; hostState.players.forEach(p => (p.hand||[]).forEach(c => { delete c.ex; })); hostState.phase = 'PLAY'; determineFirstPlayer(); broadcastState(); }, 1500);
 }
@@ -1470,7 +1471,7 @@ function processAction(uid, act) {
         let next = hostState.interaction.queue[0]; if(next.type === 'BOMBER' || !Array.isArray(act.cardIds)) return;
         const rIds = [...new Set(act.cardIds.map(String))]; let cardsToMove = p.hand.filter(c => rIds.includes(c.id)); if(cardsToMove.length !== next.count || rIds.length !== next.count) return;
         hostState.interaction.queue.shift(); p.hand = p.hand.filter(c => !rIds.includes(c.id));
-        if(next.type === 'SEVEN') { let targetIdx = getNextPlayer(pIdx, 1); if(targetIdx !== -1) { hostState.players[targetIdx].hand.push(...cardsToMove); hostState.players[targetIdx].hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)); sendMsg({type:'ANIM', text: `🎁${cardsToMove.length}枚渡し!`}); } } 
+        if(next.type === 'SEVEN') { let targetIdx = getNextPlayer(pIdx, 1); if(targetIdx !== -1) { cardsToMove.forEach(c => c.ex = 1); setTimeout(() => { cardsToMove.forEach(c => { delete c.ex; }); if(hostState) broadcastState(); }, 1500); hostState.players[targetIdx].hand.push(...cardsToMove); hostState.players[targetIdx].hand.sort((a,b)=>getBaseStr(a)-getBaseStr(b)); sendMsg({type:'ANIM', text: `🎁${cardsToMove.length}枚渡し!`}); } } 
         else if(next.type === 'TEN') { sendMsg({type:'ANIM', text: `🗑${cardsToMove.length}枚捨て!`}); }
         if(p.hand.length === 0) { handleWin(pIdx, []); if(hostState.interaction) hostState.interaction.queue = []; }
         triggerNextInteraction(); return;
